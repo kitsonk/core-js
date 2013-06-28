@@ -1,0 +1,24 @@
+{
+  "name": "core",
+  "version": "0.0.2",
+  "devDependencies": {
+    "intern": "git+https://github.com/kitsonk/intern.git#3b5185e"
+  },
+  "licenses": [
+    {
+      "type": "BSD-3-Clause",
+      "url": "https://github.com/kitsonk/core/blob/master/LICENSE"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/kitsonk/core.git"
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "readmeFile": "README.md",
+  "homepage": "https://github.com/kitsonk/core",
+  "bugs": "https://github.com/kitsonk/core/issues",
+  "dojoBuild": "package.js"
+}

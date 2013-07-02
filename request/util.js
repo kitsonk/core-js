@@ -4,9 +4,8 @@ define([
 	'../errors/CancelError',
 	'../Deferred',
 	'../io-query',
-	'../lang',
-	'../promise/Promise'
-], function (exports, RequestError, CancelError, Deferred, ioQuery, lang, Promise) {
+	'../lang'
+], function (exports, RequestError, CancelError, Deferred, ioQuery, lang) {
 	'use strict';
 
 	exports.deepCopy = function deepCopy(target, source) {

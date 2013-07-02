@@ -1,6 +1,6 @@
 {
   "name": "core",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "devDependencies": {
     "intern": "git+https://github.com/kitsonk/intern.git#3b5185e"
   },

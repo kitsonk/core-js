@@ -66,7 +66,7 @@ define([
 			error.response = response;
 			throw error;
 		}
-		var responsePromise = def.then(okHandler).otherwise(errHandler);
+		var responsePromise = def.then(okHandler).then(null, errHandler);
 
 		if (exports.notify) {
 			responsePromise.then(

@@ -1,7 +1,6 @@
 define([
-	'./Promise',
 	'../Evented'
-], function (Promise, Evented) {
+], function (Evented) {
 	'use strict';
 
 	// module:
@@ -29,6 +28,8 @@ define([
 		}
 	};
 	=====*/
+
+	/* global Promise */
 
 	var evented = new Evented();
 	var emit = evented.emit;

@@ -1,7 +1,6 @@
 define([
-	'./Deferred',
-	'./promise/Promise'
-], function (Deferred, Promise) {
+	'./Deferred'
+], function (Deferred) {
 	'use strict';
 
 	// module:
@@ -32,6 +31,7 @@ define([
 		// returns: dojo/promise/Promise
 		//		Promise, or if a callback is provided, the result of the callback.
 
+		/* global Promise */
 		var receivedPromise = valueOrPromise && typeof valueOrPromise.then === 'function';
 		var nativePromise = receivedPromise && valueOrPromise instanceof Promise;
 

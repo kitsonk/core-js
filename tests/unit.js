@@ -1,3 +1,5 @@
 define([
-	'./compose'
+	'./compose',
+	'./Deferred',
+	'./when'
 ], 1);

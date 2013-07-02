@@ -1,9 +1,8 @@
 define([
 	'./has',
 	'./errors/CancelError',
-	'./promise/Promise',
 	'./has!config-deferredInstrumentation?./promise/instrumentation'
-], function (has, CancelError, Promise, instrumentation) {
+], function (has, CancelError, instrumentation) {
 	'use strict';
 
 	// module:

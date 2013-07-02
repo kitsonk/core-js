@@ -82,9 +82,10 @@ define([
 		// prototype using lang.delegate on dataPromise and
 		// assigning the result a property with a reference to
 		// responsePromise.
+		/* global Promise */
 		var promise = new Promise();
 		for (var prop in dataPromise) {
-			if (dataPromise.hasOwnProperty(prop)) {
+			if (Object.hasOwnProperty(dataPromise, prop)) {
 				promise[prop] = dataPromise[prop];
 			}
 		}

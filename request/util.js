@@ -84,10 +84,9 @@ define([
 		// responsePromise.
 		/* global Promise */
 		var promise = new Promise();
-		for (var prop in dataPromise) {
-			if (Object.hasOwnProperty(dataPromise, prop)) {
-				promise[prop] = dataPromise[prop];
-			}
+		var props = Object.keys(dataPromise);
+		for (var i = 0; i < props.length; i++) {
+			promise[props[i]] = dataPromise[props[i]];
 		}
 		promise.response = responsePromise;
 		freeze(promise);

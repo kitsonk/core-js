@@ -2,81 +2,88 @@ define([
 ], function () {
 	'use strict';
 
-	var hasOwnProp = Object.prototype.hasOwnProperty;
+	var hasOwnProp = Object.prototype.hasOwnProperty,
+		getPrototypeOf = Object.getPrototypeOf,
+		getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor,
+		defineProperty = Object.defineProperty;
 
 	return {
+		/**
+		 * Returns a property descriptor from an object for the supplied property name.
+		 *
+		 * Ascends the prototype of the object until it can find the property descriptor for the object, returning
+		 * `undefined` if not found within its inheritance chain.
+		 * @param  {Object} obj  The object that should be inspected for property descriptor
+		 * @param  {String} name The name of the property to find a property descriptor for
+		 * @return {Object}      The descriptor if found
+		 */
 		getDescriptor: function (obj, name) {
-			// summary:
-			//		Return a property descriptor from an object for the supplied property name.
-			// description:
-			//		Ascends the prototype of the object until it can find the property descriptor for the object,
-			//		returning `undefined` if not found within it's inheritance chain.
-			//
-			//		An example of usage would be:
-			//		|	obj = Object.create({ foo: 'bar' });
-			//		|	var propertyDescriptor = properties.getPropertyDescriptor(obj, 'foo');
-			//
-			// obj: Object
-			//		The object that should be inspected for the property descriptor.
-			// name: String
-			//		The name of the property to find a property descriptor for.
-			// returns: Object|undefined
-			//		The descriptor if found
-
 			while (obj && !hasOwnProp.call(obj, name)) {
-				obj = Object.getPrototypeOf(obj);
+				obj = getPrototypeOf(obj);
 			}
-			return obj ? Object.getOwnPropertyDescriptor(obj, name) : undefined;
+			return obj ? getOwnPropertyDescriptor(obj, name) : undefined;
 		},
 
+		/**
+		 * Returns `true` if the provided descriptor is a data descriptor, otherwise `false`
+		 * @param  {Object}  descriptor The descriptor to inspect
+		 * @return {Boolean}            If the supplied descriptor is a data descriptor
+		 */
 		isAccessorDescriptor: function (descriptor) {
-			// summary:
-			//		Returns 'true' if the provided descriptor is a data descriptor, otherwise 'false'
-			// descriptor: Object
-			//		The descriptor to inspect.
-			// returns: Boolean
-
 			return descriptor ? 'get' in descriptor || 'set' in descriptor : false;
 		},
 
+		/**
+		 * Returns `true` if the provided descriptor is an accessor descriptor, otherwise `false`
+		 * @param  {Object}  descriptor The descriptor to inspect
+		 * @return {Boolean}            If the supplied descriptor is an accessor descriptor
+		 */
 		isDataDescriptor: function (descriptor) {
-			// summary:
-			//		Returns 'true' if the provided descriptor is an accessor descriptor, otherwise 'false'
-			// descriptor: Object
-			//		The descriptor to inspect.
-			// returns: Boolean
-
 			return descriptor ? 'value' in descriptor || 'writable' in descriptor : false;
 		},
 
+		/**
+		 * Removes a property, including from its inheritance chain.
+		 *
+		 * Ascends the prototype of the object, deleting any occurrences of the named property.  This is useful when
+		 * wanting to ensure that if a configurable property is defined somewhere in the inheritance chain, it does not
+		 * get persisted when using the object as a prototype for another object.
+		 * @param  {Object} obj  The object that should be deleted from
+		 * @param  {String} name The name of the property to remove
+		 */
 		remove: function (obj, name) {
-			// summary:
-			//		Removes a property, including in its inheritance chain.
-			// description:
-			//		Ascends the prototype of the object deleting any occurrences of the name property.  This is useful when
-			//		wanting to ensure that if a configurable property is defined somewhere in the inheritance chain, it
-			//		does not get persisted when using the object as a prototype for another object.
-			// obj: Object
-			//		The object that should property should be deleted from.
-			// name: String
-			//		The name of the property to find a property descriptor for.
 			do {
 				if (obj && hasOwnProp.call(obj, name)) {
 					delete obj[name];
 				}
-			} while ((obj = Object.getPrototypeOf(obj)));
+			}
+			while ((obj = getPrototypeOf(obj)));
 		},
 
+		/**
+		 * Creates a non-enumerable property with an appended `_` in front of the name.
+		 * @param  {Object} obj   The object that the property should be created on
+		 * @param  {String} name  The name of the property to be shadowed
+		 * @param  {Mixed}  value The value of the property
+		 * @return {Mixed}        The value that was set
+		 */
 		shadow: function (obj, name, value) {
-			Object.defineProperty(obj, '_' + name, {
+			defineProperty(obj, '_' + name, {
 				value: value,
 				configurable: true
 			});
 			return value;
 		},
 
+		/**
+		 * Creates a ready only property, with a supplied value
+		 * @param  {Object} obj   The object that the property should be created on
+		 * @param  {String} name  The name of the property
+		 * @param  {Mixed}  value The value of the property
+		 * @return {Mixed}        The value that was set
+		 */
 		readOnly: function (obj, name, value) {
-			Object.defineProperty(obj, name, {
+			defineProperty(obj, name, {
 				value: value,
 				enumerable: true,
 				configurable: true

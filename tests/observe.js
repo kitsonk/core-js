@@ -24,7 +24,7 @@ define([
 				assert.strictEqual(2, changeRecords[5].oldValue);
 			});
 
-			observe(obj, null, callback);
+			var handle = observe(obj, null, callback);
 
 			assert.deepEqual(['foo', 'bar'], Object.keys(obj), 'enumerability preserved');
 			obj.foo = 'qat';
@@ -35,6 +35,10 @@ define([
 			obj.bar = 0;
 			assert.strictEqual('bar', obj.foo);
 			assert.strictEqual(0, obj.bar);
+
+			handle.remove();
+			obj.foo = 'qat';
+			obj.bar = 4;
 		});
 	});
 });

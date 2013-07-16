@@ -1,10 +1,14 @@
-define([], function () {
+define([
+	'./properties'
+], function (properties) {
 	'use strict';
 
 	// module:
 	//		dojo/aspect
 
 	var undefined,
+		getDescriptor = properties.getDescriptor,
+		defineProperty = Object.defineProperty,
 		nextId = 0;
 
 	function advise(dispatcher, type, advice, receiveArguments) {
@@ -75,37 +79,44 @@ define([], function () {
 	}
 	function aspect(type) {
 		return function (target, methodName, advice, receiveArguments) {
-			var existing = target[methodName], dispatcher;
+			var existing = target[methodName],
+				descriptor = getDescriptor(target, methodName),
+				dispatcher;
 			if (!existing || existing.target !== target) {
 				// no dispatcher in place
-				target[methodName] = dispatcher = function () {
-					var executionId = nextId;
-					// before advice
-					var args = arguments;
-					var before = dispatcher.before;
-					while (before) {
-						args = before.advice.apply(this, args) || args;
-						before = before.next;
-					}
-					// around advice
-					if (dispatcher.around) {
-						var results = dispatcher.around.advice(this, args);
-					}
-					// after advice
-					var after = dispatcher.after;
-					while (after && after.id < executionId) {
-						if (after.receiveArguments) {
-							var newResults = after.advice.apply(this, args);
-							// change the return value only if a new value was returned
-							results = newResults === undefined ? results : newResults;
+				defineProperty(target, methodName, {
+					value: (dispatcher = function () {
+						var executionId = nextId;
+						// before advice
+						var args = arguments;
+						var before = dispatcher.before;
+						while (before) {
+							args = before.advice.apply(this, args) || args;
+							before = before.next;
 						}
-						else {
-							results = after.advice.call(this, results, args);
+						// around advice
+						if (dispatcher.around) {
+							var results = dispatcher.around.advice(this, args);
 						}
-						after = after.next;
-					}
-					return results;
-				};
+						// after advice
+						var after = dispatcher.after;
+						while (after && after.id < executionId) {
+							if (after.receiveArguments) {
+								var newResults = after.advice.apply(this, args);
+								// change the return value only if a new value was returned
+								results = newResults === undefined ? results : newResults;
+							}
+							else {
+								results = after.advice.call(this, results, args);
+							}
+							after = after.next;
+						}
+						return results;
+					}),
+					writable: true,
+					enumerable: descriptor ? descriptor.enumerable : true,
+					configurable: true
+				});
 				if (existing) {
 					dispatcher.around = { advice: function (target, args) {
 						return existing.apply(target, args);

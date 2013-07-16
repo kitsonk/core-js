@@ -179,6 +179,102 @@ define([
 	}
 
 	/**
+	 * Converts an array into an observable one
+	 * @param  {Array} array Takes a standard array and converts it into an observable one
+	 * @return {Array}       A reference to the observable array
+	 */
+	function observeArray(array) {
+
+		/**
+		 * Returns a function that wraps the native array functions that can modify the array and generates a delta of
+		 * change records for the array
+		 * @param  {Function} fn The original function being wrapped
+		 * @return {Function}    The newly wrapped function
+		 */
+		var arrayObserver = function (fn) {
+			return function () {
+				var notifier = getNotifier(this),
+					notify = notifier.notify,
+					i;
+
+				/* save the state of the existing array */
+				var old = this.slice(0),
+					oldLength = this.length;
+
+				/* execute the original function */
+				var result = fn.apply(this, arguments);
+
+				/* now look for changes in the array */
+				for (i = 0; i < oldLength; i++) {
+					if (old[i] !== this[i]) {
+						if (typeof this[i] === 'undefined') {
+							notify.call(notifier, new ChangeRecord('deleted', this, i, old[i]));
+						}
+						else if (typeof old[i] === 'undefined') {
+							notify.call(notifier, new ChangeRecord('new', this, i));
+						}
+						else {
+							notify.call(notifier, new ChangeRecord('updated', this, i, old[i]));
+						}
+					}
+				}
+				for (i = old.length; i < this.length; i++) {
+					if (typeof this[i] !== 'undefined') {
+						notify.call(notifier, new ChangeRecord('new', this, i));
+					}
+				}
+
+				/* and verify the length is right */
+				if (oldLength !== this.length) {
+					notify.call(notifier, new ChangeRecord('updated', this, 'length', oldLength));
+				}
+
+				/* return the original result */
+				return result;
+			};
+		};
+
+		var handles = [];
+
+		/* Here we get advice around each of the original functions which can modify the array. */
+		handles.push(around(array, 'pop', arrayObserver));
+		handles.push(around(array, 'push', arrayObserver));
+		handles.push(around(array, 'reverse', arrayObserver));
+		handles.push(around(array, 'shift', arrayObserver));
+		handles.push(around(array, 'sort', arrayObserver));
+		handles.push(around(array, 'splice', arrayObserver));
+		handles.push(around(array, 'unshift', arrayObserver));
+
+		/* We also add `get` and `set` to be able to track changes to the array, since directly watching all the elements
+		 * would be a bit onerous */
+		Object.defineProperties(array, {
+			get: {
+				value: function (idx) {
+					return this[idx];
+				},
+				configurable: true
+			},
+			set: {
+				value: arrayObserver(function (idx, value) {
+					this[idx] = value;
+				}),
+				configurable: true
+			}
+		});
+
+		/* provide a handle that can be used to "reset" the array */
+		return {
+			remove: function () {
+				handles.forEach(function (handle) {
+					handle && handle.remove && handle.remove();
+				});
+				delete array.get;
+				delete array.set;
+			}
+		};
+	}
+
+	/**
 	 * Install a property on the target object that generates change records.
 	 * @param  {Object} target       The object being observed
 	 * @param  {String} name         The property being installed
@@ -402,29 +498,45 @@ define([
 	 * @return {Object}                  A handle that will remove the observer
 	 */
 	function observe(target, observer, deep, properties) {
-		if (properties && typeof properties === 'string') {
-			properties = properties.split(/\s+/);
-		}
-		else if (!properties) {
-			properties = [];
-		}
-		if (!(properties instanceof Array)) {
-			throw new TypeError('properties must be an Array or undefined');
-		}
-		if (!properties.length) {
-			properties = keys(target);
-		}
-		properties.forEach(function (property) {
-			if (property in target) {
-				installObservableProperty(target, property);
+		var handles = [];
+		if (target instanceof Array) {
+			handles.push(observeArray(target));
+			if (deep) {
+				target.forEach(function (item) {
+					if (typeof item === 'object' && item !== null) {
+						handles.push(observe(item, observer, deep));
+					}
+				});
 			}
-			if (deep && typeof target[property] === 'object' && target[property] !== null) {
-				observe(target[property], observer, deep);
+		}
+		else {
+			if (properties && typeof properties === 'string') {
+				properties = properties.split(/\s+/);
 			}
-		});
+			else if (!properties) {
+				properties = [];
+			}
+			if (!(properties instanceof Array)) {
+				throw new TypeError('properties must be an Array or undefined');
+			}
+			if (!properties.length) {
+				properties = keys(target);
+			}
+			properties.forEach(function (property) {
+				if (property in target) {
+					installObservableProperty(target, property);
+				}
+				if (deep && typeof target[property] === 'object' && target[property] !== null) {
+					handles.push(observe(target[property], observer, deep));
+				}
+			});
+		}
 		addObserver(target, observer);
 		return {
 			remove: function () {
+				handles.forEach(function (item) {
+					item && item.remove && item.remove();
+				});
 				removeObserver(target, observer);
 			}
 		};
@@ -440,6 +552,11 @@ define([
 			value: uninstallObservableProperty,
 			enumerable: true,
 			configurable: true
+		},
+		getObservers: {
+			value: function (target) {
+				return getNotifier(target).observers;
+			}
 		},
 		ChangeRecord: {
 			value: ChangeRecord,

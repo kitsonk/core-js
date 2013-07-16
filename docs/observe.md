@@ -1,0 +1,48 @@
+# core/observe
+
+**core/observe** is a module that provides observation functionality that is similar to the
+[Harmony `Object.observe`](harmony) functionality.  The problem is that currently the standard is still potentially
+being evolved, has been moved to being part of ES7 and is not currently available in any stable browser implementation.
+Also, the currently available shims/polyfills utilise a polling mechanism to monitor objects for changes.  This module
+takes a different approach.
+
+What it attempts to do is to redfine the properties of the object, using ES5 accessors, to accomplish similar
+functionality.  This reduces the burden of observation to only occur when properties are actually change.  In addition
+it has special handling for arrays that rewrites the methods that can manipulate the array so that changes are then
+observed in arrays as well.
+
+This approach does have some drawback and limitations.  First, directly creating and deleting new properties will go
+unobserved.  The `.defineProperty()` and `.removeProperty()` can overcome that limitation.  Also with arrays, directly
+assigning values elements of the array will go unobserved.  Each observed array will be decorated with a `.set()` (as
+well as a convenience of a `.get()`) to address this limitation.
+
+## Usage
+
+Basic usage is simply to provide a callback on an object:
+
+```js
+require(['core/observe', function (observe) {
+	var obj = {
+		foo: 'bar'
+	};
+
+	function callback (changeRecords) {
+		console.log(changeRecords);
+	}
+
+	observe(obj, callback);
+
+	obj.foo = 'baz';
+}]);
+```
+
+This should output something like:
+
+```js
+[{
+	type: 'updated',
+	target: obj,
+	name: 'foo',
+	oldValue: 'bar'
+}]
+```

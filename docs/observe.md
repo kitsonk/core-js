@@ -1,7 +1,7 @@
 # core/observe
 
 **core/observe** is a module that provides observation functionality that is similar to the
-[Harmony `Object.observe`](harmony) functionality.  The problem is that currently the standard is still potentially
+[Harmony `Object.observe`][harmony] functionality.  The problem is that currently the standard is still potentially
 being evolved, has been moved to being part of ES7 and is not currently available in any stable browser implementation.
 Also, the currently available shims/polyfills utilise a polling mechanism to monitor objects for changes.  This module
 takes a different approach.
@@ -15,6 +15,10 @@ This approach does have some drawback and limitations.  First, directly creating
 unobserved.  The `.defineProperty()` and `.removeProperty()` can overcome that limitation.  Also with arrays, directly
 assigning values elements of the array will go unobserved.  Each observed array will be decorated with a `.set()` (as
 well as a convenience of a `.get()`) to address this limitation.
+
+Because the change records produced by core/observe are functionally the same as `Object.observe`, when the browser
+supports `Object.observe` it will offload it.  In addition, if you set the `has()` flag of `es7-object-observe` in a
+build, it will optimise out the code needed to provide support when `Object.observe` isn't present.
 
 ## Usage
 
@@ -46,3 +50,5 @@ This should output something like:
 	oldValue: 'bar'
 }]
 ```
+
+[harmony]: http://wiki.ecmascript.org/doku.php?id=harmony:observe

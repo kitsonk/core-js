@@ -1,9 +1,18 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../observe'
-], function (test, assert, observe) {
+	'../observe',
+	'../has'
+], function (test, assert, observe, has) {
 	test.suite('core/observe', function () {
+		test.test('feature detection', function () {
+			if (typeof Object.observe === 'function') {
+				assert.isTrue(has('es7-object-observe'));
+			}
+			else {
+				assert.isFalse(has('es7-object-observe'));
+			}
+		});
 		test.test('basic', function () {
 			var dfd = this.async(1000);
 
@@ -65,8 +74,10 @@ define([
 
 			observe(arr, callback);
 
-			assert.isTrue('get' in arr);
-			assert.isTrue('set' in arr);
+			if (!has('es7-object-observe')) {
+				assert.isTrue('get' in arr);
+				assert.isTrue('set' in arr);
+			}
 
 			arr.push(1);
 			assert.strictEqual(1, arr.pop(), 'should return last element');

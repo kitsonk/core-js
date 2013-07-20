@@ -150,21 +150,6 @@ define([
 		});
 
 		/**
-		 * Return the notifier associated with the observed object
-		 * @param  {Object}                target The object that is being observed
-		 * @return {core/observe/Notifier}        The instance of the notifier
-		 */
-		var getNotifier = function (target) {
-			if (isFrozen(target)) {
-				return null;
-			}
-			if (!notifiers.get(target)) {
-				notifiers.set(target, new Notifier(target));
-			}
-			return notifiers.get(target);
-		};
-
-		/**
 		 * Install a property on the target object that generates change records.
 		 * @param  {Object} target       The object being observed
 		 * @param  {String} name         The property being installed
@@ -333,6 +318,27 @@ define([
 				}
 				delete targetObservedProperties[name];
 			}
+		};
+	}
+
+	/**
+	 * Return the notifier associated with the observed object
+	 * @param  {Object}                target The object that is being observed
+	 * @return {core/observe/Notifier}        The instance of the notifier
+	 */
+	var getNotifier;
+	if (has('es7-object-observe')) {
+		getNotifier = Object.getNotifier;
+	}
+	else {
+		getNotifier = function (target) {
+			if (isFrozen(target)) {
+				return null;
+			}
+			if (!notifiers.get(target)) {
+				notifiers.set(target, new Notifier(target));
+			}
+			return notifiers.get(target);
 		};
 	}
 
@@ -508,6 +514,104 @@ define([
 		};
 	}
 
+	/* Stores any observe.path callbacks on an object */
+	var pathCallbacks = new SideTable();
+
+	/**
+	 * This is the observer callback that will read the change records of any path callbacks and then callback the
+	 * path callbacks as appropriate.
+	 * @param  {Array} changeRecords An array of change records for objects being observed
+	 */
+	function pathObserver(changeRecords) {
+		var targetCallbacks,
+			callbacks,
+			name,
+			obj,
+			oldValue,
+			currentValue;
+		changeRecords.forEach(function (changeRecord) {
+			if (changeRecord.type === 'updated') {
+				obj = changeRecord.object;
+				targetCallbacks = pathCallbacks.get(obj);
+				name = changeRecord.name;
+				if (targetCallbacks && name in targetCallbacks) {
+					oldValue = changeRecord.oldValue;
+					currentValue = obj[name];
+					callbacks = targetCallbacks[name];
+					callbacks.forEach(function (callback) {
+						callback.call(obj, oldValue, currentValue);
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Observe value updates to a targets path (a string where sub-properties are separated by dots (`.`)).  The
+	 * `callback` will be called with two arguments of `oldValue` (the value prior to the change) and `newValue` (the
+	 * value after the change)
+	 * @param  {Object}   target   The object to be observed
+	 * @param  {String}   path     A "path" to the property to be observed, where `foo` would equate to `'target.foo'`
+	 *                             and `'foo.bar'` would equate to `target.foo.bar`.
+	 * @param  {Function} callback A function that will be called with two arguments, the first argument representing
+	 *                             the value before the change and the second being the value after the change
+	 * @return {Object}            A handle with a method of `.remove()`
+	 */
+	function observePath(target, path, callback) {
+		var pathArray = path.split('.'),
+			callbacks,
+			prop,
+			name,
+			handle;
+
+		/* traverse the path */
+		while (pathArray.length) {
+			name = pathArray.shift();
+			if (name in target) {
+				prop = target[name];
+				if (pathArray.length) {
+					if (typeof prop === 'object' || typeof prop === 'function') {
+						target = prop;
+					}
+					else {
+						throw new TypeError('Tried to observe a path that cannot resolve to a property.\n"' + name +
+							'" is not an object or function.');
+					}
+				}
+			}
+			else {
+				throw new Error('Cannot resolve path "' + path + '", "' + name + '" not found.');
+			}
+		}
+
+		/* determine if there are any callbacks registered on the target */
+		if (!(callbacks = pathCallbacks.get(target))) {
+			callbacks = {};
+			pathCallbacks.set(target, callbacks);
+			handle = observe(target, pathObserver, false, [ name ]);
+		}
+
+		/* determine if this particular property callback is registered */
+		if (!(name in callbacks)) {
+			callbacks[name] = [];
+			(installObservableProperty || noop)(target, name);
+		}
+
+		/* add callback to callbacks */
+		callbacks[name].push(callback);
+
+		/* return handle */
+		return {
+			remove: function () {
+				callbacks.splice(callbacks.indexOf(callback), 1);
+				if (!callbacks.length) {
+					pathCallbacks['delete'](target);
+					removeObserver(target, pathObserver);
+				}
+			}
+		};
+	}
+
 	/**
 	 * Observe an object for changes
 	 * @param  {Object}       target     The target of the observation
@@ -576,10 +680,15 @@ define([
 			enumerable: true,
 			configurable: true
 		},
-		getObservers: {
-			value: function (target) {
-				return getNotifier(target).observers;
-			}
+		path: {
+			value: observePath,
+			enumerable: true,
+			configurable: true
+		},
+		getNotifier: {
+			value: getNotifier,
+			enumerable: true,
+			configurable: true
 		}
 	});
 

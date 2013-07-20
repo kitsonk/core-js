@@ -13,6 +13,16 @@ define([
 				assert.isFalse(has('es7-object-observe'));
 			}
 		});
+		test.test('getNotifier', function () {
+			var obj = {};
+
+			function callback() {}
+
+			observe(obj, callback);
+			var notifier = observe.getNotifier(obj);
+			assert(notifier);
+			assert.strictEqual('function', typeof notifier.notify);
+		});
 		test.test('basic', function () {
 			var dfd = this.async(1000);
 
@@ -74,10 +84,8 @@ define([
 
 			observe(arr, callback);
 
-			if (!has('es7-object-observe')) {
-				assert.isTrue('get' in arr);
-				assert.isTrue('set' in arr);
-			}
+			assert.isTrue('get' in arr);
+			assert.isTrue('set' in arr);
 
 			arr.push(1);
 			assert.strictEqual(1, arr.pop(), 'should return last element');
@@ -85,6 +93,43 @@ define([
 			arr.push(3);
 			arr.unshift(1);
 			assert.strictEqual(1, arr.shift(), 'should return first element');
+		});
+		test.suite('observe.path', function () {
+			test.test('basic', function () {
+				var dfd = this.async(250);
+
+				var obj = { foo: 'bar' };
+
+				var callback = dfd.callback(function (oldValue, newValue) {
+					assert.strictEqual('bar', oldValue);
+					assert.strictEqual('qat', newValue);
+					assert.strictEqual(obj, this);
+				});
+
+				observe.path(obj, 'foo', callback);
+				obj.foo = 'qat';
+			});
+			test.test('deep', function () {
+				var dfd = this.async(250);
+
+				var obj = {
+					foo: {
+						bar: {
+							baz: {
+								qat: 'foo'
+							}
+						}
+					}
+				};
+
+				var callback = dfd.callback(function (oldValue, newValue) {
+					assert.strictEqual('foo', oldValue);
+					assert.strictEqual('bar', newValue);
+				});
+
+				observe.path(obj, 'foo.bar.baz.qat', callback);
+				obj.foo.bar.baz.qat = 'bar';
+			});
 		});
 	});
 });

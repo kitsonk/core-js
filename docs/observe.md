@@ -25,7 +25,7 @@ build, it will optimise out the code needed to provide support when `Object.obse
 Basic usage is simply to provide a callback on an object:
 
 ```js
-require(['core/observe', function (observe) {
+require(['core/observe'], function (observe) {
 	var obj = {
 		foo: 'bar'
 	};
@@ -49,6 +49,37 @@ This should output something like:
 	name: 'foo',
 	oldValue: 'bar'
 }]
+```
+
+### .path()
+
+`observe.path()` is a higher order function that makes it easier to be able to observe value changes on properties,
+versus having to deal with interpreting the change records that would come from `observe()`.  It is designed to just
+provide simple notification of the previous value of the property and the new value.  The callback is supplied with
+two arguments of `oldValue` and `newValue`.  So something like this:
+
+```js
+require(['core/observe'], function (observe) {
+	var obj = {
+		foo: {
+			bar: 'baz'
+		}
+	};
+
+	function callback (oldValue, newValue) {
+		console.log(oldValue, newValue);
+	}
+
+	observe.path(obj, 'foo.bar', callback);
+
+	obj.foo.bar = 'qat';
+});
+```
+
+Would output:
+
+```js
+baz qat
 ```
 
 [harmony]: http://wiki.ecmascript.org/doku.php?id=harmony:observe

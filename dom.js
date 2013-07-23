@@ -6,14 +6,13 @@ define([
 ], function (doc, has, lang, on) {
 	'use strict';
 
-	has.add('dom-element-matches', function () {
+	has.add('dom-element-matches', function (global, doc, element) {
 		// This is slightly more robust than what is in dojo/selector/lite in that it returns the function name out of
 		// the prototype, which can then be used as a key on Elements directly.
 
 		// Also, currently the has API doesn't recognise the pseudo DOM and therefore the passed arguments to the
 		// function to detect the capabilities
-		var element = doc.createElement('div'),
-			matchesFunctionName = 'matches' in element ? 'matches' : false;
+		var matchesFunctionName = 'matches' in element ? 'matches' : false;
 		if (!matchesFunctionName) {
 			['moz', 'webkit', 'ms', 'o'].some(function (vendorPrefix) {
 				return vendorPrefix + 'MatchesSelector' in element ?
@@ -42,6 +41,9 @@ define([
 
 		return false;
 	});
+
+	var defineProperties = Object.defineProperties,
+		defineProperty = Object.defineProperty;
 
 	// if it has any of these combinators, it is probably going to be faster with a document fragment
 	var fragmentFasterHeuristicRE = /[-+,> ]/,
@@ -430,9 +432,9 @@ define([
 		if (!nodes) {
 			return nodes;
 		}
-		Object.defineProperties(nodes, nodeListDescriptors);
+		defineProperties(nodes, nodeListDescriptors);
 		if (this && this.doc) {
-			Object.defineProperty(nodes, 'doc', {
+			defineProperty(nodes, 'doc', {
 				value: this.doc,
 				configurable: true
 			});
@@ -549,7 +551,7 @@ define([
 		}
 	};
 
-	Object.defineProperties(dom, descriptors);
+	defineProperties(dom, descriptors);
 	dom.prototype = proto;
 
 	domCache.push({

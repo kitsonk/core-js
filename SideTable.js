@@ -24,7 +24,7 @@ define([
 			hasOwnProperty = Object.hasOwnProperty,
 			uid = new Date().getTime() % 1e9;
 
-		SideTable = function () {
+		SideTable = function SideTable() {
 			/* Assign a GUID */
 			this.name = '__st' + (1e9 * Math.random() >>> 0) + (uid++ + '__');
 		};

@@ -671,7 +671,18 @@ define([
 
 	defineProperties(observe, {
 		install: {
-			value: installObservableProperty || noop,
+			value: function (target, name) {
+				var targetValue = target[name],
+					typeofTarget = typeof target;
+				if (typeofTarget !== 'undefined' && targetValue !== null) {
+					if (typeofTarget === 'object' && targetValue instanceof Array) {
+						return observeArray(targetValue);
+					}
+					else if (installObservableProperty) {
+						return installObservableProperty(target, name);
+					}
+				}
+			},
 			enumerable: true,
 			configurable: true
 		},

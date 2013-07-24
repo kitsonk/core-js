@@ -229,21 +229,22 @@ define([
 			}
 
 			/* Initialise the hash of observed properties on the target if not already present */
-			if (!observedProperties.get(target)) {
-				observedProperties.set(target, {});
+			var targetObservedProperties;
+			if (!(targetObservedProperties = observedProperties.get(target))) {
+				targetObservedProperties = {};
+				observedProperties.set(target, targetObservedProperties);
 			}
 
-			var targetObservedProperties = observedProperties.get(target),
-				isDataDescriptor = properties.isDataDescriptor,
+			var isDataDescriptor = properties.isDataDescriptor,
 				isAccessorDescriptor = properties.isAccessorDescriptor,
 				getDescriptor = properties.getDescriptor,
 				oldDescriptor, newDescriptor;
 
-			if (!(name in targetObservedProperties)) {
+			if (!(targetObservedProperties[name])) {
 				if (name in target) {
 					oldDescriptor = descriptor || getDescriptor(target, name);
 					if (oldDescriptor.configurable) {
-						// only configurable properties can be observed
+						/* only configurable properties can be observed */
 						if (isDataDescriptor(oldDescriptor) && oldDescriptor.writable) {
 							newDescriptor = getObservableDataDescriptor(oldDescriptor);
 						}

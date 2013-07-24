@@ -257,12 +257,14 @@ define([
 								oldDescriptor: oldDescriptor,
 								newDescriptor: newDescriptor
 							};
-							notify(target.hasOwnProperty(name) ? 'reconfigured' : 'new');
+							if (descriptor) {
+								notify('reconfigured');
+							}
 						}
 					}
 				}
 				else {
-					newDescriptor = getObservableDataDescriptor({ value: undefined, enumerable: true });
+					newDescriptor = getObservableDataDescriptor(descriptor || { value: undefined, enumerable: true });
 					defineProperty(target, name, newDescriptor);
 					targetObservedProperties[name] = {
 						newDescriptor: newDescriptor

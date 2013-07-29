@@ -1,5 +1,6 @@
 define([
 	'./compose',
+	'./dom',
 	'./Deferred',
 	'./SideTable',
 	'./when'

@@ -49,6 +49,7 @@ define([
 	var fragmentFasterHeuristicRE = /[-+,> ]/,
 
 		selectorRE = /(?:\s*([-+ ,<>]))?\s*(\.|!\.?|#)?([-\w%$|]+)?(?:\[([^\]=]+)=?['"]?([^\]'"]*)['"]?\])?/g,
+		selectorParserRE = /(?:\s*([-+ ,<>]))?\s*(\.|!\.?|#)?([-\w%$|]+)?(?:\[([^\]=]+)=?['"]?([^\]'"]*)['"]?\])?(?::([-\w]+)(?:\(([^\)]+)\))?)?/g,
 		namespaces = false,
 		namespaceIndex,
 
@@ -64,6 +65,49 @@ define([
 
 	function get(id) {
 		return ((typeof id === 'string') ? this.doc.getElementById(id) : id) || null;
+	}
+
+	function getSelectorObject(selector) {
+		var combinator,
+			tag,
+			id,
+			classes = [],
+			pseudoSelectors = {},
+			attributes = {};
+
+		function parser(t, comb, prefix, value, attrName, attrValue, pseudoName, pseudoValue) {
+			if (comb) {
+				combinator = comb;
+			}
+			if (prefix) {
+				if (prefix === '#') {
+					id = value;
+				}
+				else {
+					classes.push(value);
+				}
+			}
+			else if (value) {
+				tag = value;
+			}
+			if (attrName) {
+				attributes[attrName] = attrValue;
+			}
+			if (pseudoName) {
+				pseudoSelectors[pseudoName] = pseudoValue || true;
+			}
+		}
+
+		selector.replace(selectorParserRE, parser);
+
+		return {
+			combinator: combinator,
+			tag: tag,
+			id: id,
+			classes: classes,
+			pseudoSelectors: pseudoSelectors,
+			attributes: attributes
+		};
 	}
 
 	function add(node/*, selectors...*/) {
@@ -491,6 +535,10 @@ define([
 		},
 		remove: {
 			value: remove,
+			enumerable: true
+		},
+		parseSelector: {
+			value: getSelectorObject,
 			enumerable: true
 		},
 		setSelectable: {

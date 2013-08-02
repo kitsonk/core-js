@@ -76,7 +76,7 @@ define([
 		},
 
 		/**
-		 * Creates a ready only property, with a supplied value
+		 * Creates a read only property, with a supplied value
 		 * @param  {Object} obj   The object that the property should be created on
 		 * @param  {String} name  The name of the property
 		 * @param  {Mixed}  value The value of the property
@@ -89,6 +89,45 @@ define([
 				configurable: true
 			});
 			return value;
+		},
+
+		/**
+		 * Returns a read only property descriptor
+		 * @param  {Any}    value The value of the property
+		 * @return {Object}       The property descriptor
+		 */
+		getReadOnlyDescriptor: function (value) {
+			return {
+				value: value,
+				enumerable: true,
+				configurable: true
+			};
+		},
+
+		/**
+		 * Returns a read only, non-enumerable property descriptor
+		 * @param  {Any}    value The value of the property
+		 * @return {Object}       The property descriptor
+		 */
+		getHiddenReadOnlyDescriptor: function (value) {
+			return {
+				value: value,
+				configurable: true
+			};
+		},
+
+		/**
+		 * Returns a "normal" value property descriptor
+		 * @param  {Any}    value The value of the property
+		 * @return {Object}       The property descriptor
+		 */
+		getValueDescriptor: function (value) {
+			return {
+				value: value,
+				writable: true,
+				enumerable: true,
+				configurable: true
+			};
 		}
 	};
 

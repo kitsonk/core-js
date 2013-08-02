@@ -15,6 +15,9 @@ define([
 		isFrozen = Object.isFrozen,
 		defineProperty = Object.defineProperty,
 		defineProperties = Object.defineProperties,
+		getReadOnlyDescriptor = properties.getReadOnlyDescriptor,
+		getHiddenReadOnlyDescriptor = properties.getHiddenReadOnlyDescriptor,
+		getValueDescriptor = properties.getValueDescriptor,
 		keys = Object.keys;
 
 
@@ -126,28 +129,13 @@ define([
 		};
 
 		defineProperties(Notifier.prototype, {
-			target: {
-				value: null,
-				writable: true,
-				enumerable: true,
-				configurable: true
-			},
-			observers: {
-				value: [],
-				writable: true,
-				enumerable: true,
-				configurable: true
-			},
-			notify: {
-				value: function (changeRecord) {
-					var notifier = this,
-						observers = notifier.observers;
-					enqueueChangeRecord(changeRecord, observers);
-				},
-				writable: true,
-				enumerable: true,
-				configurable: true
-			}
+			target: getValueDescriptor(null),
+			observers: getValueDescriptor([]),
+			notify: getValueDescriptor(function (changeRecord) {
+				var notifier = this,
+					observers = notifier.observers;
+				enqueueChangeRecord(changeRecord, observers);
+			})
 		});
 
 		/**
@@ -313,12 +301,7 @@ define([
 					target[name] = value;
 				}
 				else {
-					defineProperty(target, name, {
-						value: value,
-						writable: true,
-						enumerable: true,
-						configurable: true
-					});
+					defineProperty(target, name, getValueDescriptor(value));
 				}
 				delete targetObservedProperties[name];
 			}
@@ -356,18 +339,12 @@ define([
 		/* this will make it API compatible when offloading to Object.observe */
 		observeArray = function (array) {
 			defineProperties(array, {
-				get: {
-					value: function (idx) {
-						return this[idx];
-					},
-					configurable: true
-				},
-				set: {
-					value: function (idx, value) {
-						this[idx] = value;
-					},
-					configurable: true
-				}
+				get: getHiddenReadOnlyDescriptor(function (idx) {
+					return this[idx];
+				}),
+				set: getHiddenReadOnlyDescriptor(function (idx, value) {
+					this[idx] = value;
+				})
 			});
 		};
 	}
@@ -437,18 +414,12 @@ define([
 			/* We also add `get` and `set` to be able to track changes to the array, since directly watching all the elements
 			 * would be a bit onerous */
 			defineProperties(array, {
-				get: {
-					value: function (idx) {
-						return this[idx];
-					},
-					configurable: true
-				},
-				set: {
-					value: arrayObserver(function (idx, value) {
-						this[idx] = value;
-					}),
-					configurable: true
-				}
+				get: getHiddenReadOnlyDescriptor(function (idx) {
+					return this[idx];
+				}),
+				set: getHiddenReadOnlyDescriptor(arrayObserver(function (idx, value) {
+					this[idx] = value;
+				}))
 			});
 
 			/* provide a handle that can be used to "reset" the array */
@@ -674,26 +645,12 @@ define([
 	}
 
 	defineProperties(observe, {
-		install: {
-			value: installObservableProperty || noop,
-			enumerable: true,
-			configurable: true
-		},
-		uninstall: {
-			value: uninstallObservableProperty || noop,
-			enumerable: true,
-			configurable: true
-		},
-		path: {
-			value: observePath,
-			enumerable: true,
-			configurable: true
-		},
-		getNotifier: {
-			value: getNotifier,
-			enumerable: true,
-			configurable: true
-		}
+		install: getReadOnlyDescriptor(installObservableProperty || noop),
+		uninstall: getReadOnlyDescriptor(uninstallObservableProperty || noop),
+		summary: getReadOnlyDescriptor(null),
+		array: getReadOnlyDescriptor(null),
+		path: getReadOnlyDescriptor(observePath),
+		getNotifier: getReadOnlyDescriptor(getNotifier)
 	});
 
 	return observe;

@@ -130,6 +130,19 @@ define([
 				observe.path(obj, 'foo.bar.baz.qat', callback);
 				obj.foo.bar.baz.qat = 'bar';
 			});
+			test.test('remove', function () {
+				var obj = {
+					foo: 'bar'
+				};
+
+				var callback = function () {
+					throw new Error('I was called!');
+				};
+
+				var handle = observe.path(obj, 'foo', callback);
+				handle.remove();
+				console.log(obj);
+			});
 		});
 	});
 });

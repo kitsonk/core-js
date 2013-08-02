@@ -607,9 +607,9 @@ define([
 		/* return handle */
 		return {
 			remove: function () {
-				callbacks.splice(callbacks.indexOf(callback), 1);
-				if (!callbacks.length) {
-					pathCallbacks['delete'](target);
+				callbacks[name].splice(callbacks[name].indexOf(callback), 1);
+				if (!callbacks[name].length) {
+					delete callbacks[name];
 					removeObserver(target, pathObserver);
 				}
 			}

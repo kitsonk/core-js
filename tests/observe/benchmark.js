@@ -84,12 +84,12 @@ define([
 					obj['foo' + i] = 'bar';
 				}
 
-				handle = observe(obj, function () {
+				handle = observe.path(obj, 'foo', function () {
 					if (count >= 5000) {
 						handle.remove();
 						dfd.resolve();
 					}
-				}, false, 'foo');
+				});
 
 				for (count = 0; count <= 5000; count++) {
 					obj.foo = Math.random();

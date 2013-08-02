@@ -19,3 +19,6 @@
 [submodule "tests/observe/third_party/PointerEvents"]
 	path = tests/observe/third_party/PointerEvents
 	url = https://github.com/Polymer/PointerEvents.git
+[submodule "tests/observe/third_party/ShadowDOM"]
+	path = tests/observe/third_party/ShadowDOM
+	url = https://github.com/Polymer/ShadowDOM.git

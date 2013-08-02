@@ -6,8 +6,9 @@ define([
 ], function (aspect, has, properties, SideTable) {
 	'use strict';
 
-	/* Object.observe detection */
-	has.add('es7-object-observe', typeof Object.observe === 'function');
+	/* Object.observe detection, specifically designed to not offload to shims/polyfills */
+	has.add('es7-object-observe', typeof Object.observe === 'function' &&
+		/\[native\scode\]/.test(Object.observe.toString()));
 
 	var noop = function () {},
 		around = aspect.around,

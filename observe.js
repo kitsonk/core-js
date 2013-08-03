@@ -9,6 +9,9 @@ define([
 	/* Object.observe detection, specifically designed to not offload to shims/polyfills */
 	has.add('es7-object-observe', typeof Object.observe === 'function' &&
 		/\[native\scode\]/.test(Object.observe.toString()));
+	/* Array.observe detection, specifically designed to not offload to shims/polyfills */
+	has.add('es7-array-observe', typeof Array.observe === 'function' &&
+		/\[native\scode\]/.test(Array.observe.toString()));
 
 	var noop = function () {},
 		around = aspect.around,
@@ -489,37 +492,106 @@ define([
 		};
 	}
 
-	/* Stores any observe.path callbacks on an object */
-	var pathCallbacks = new SideTable();
+	/* Stores any observe.summary callbacks on an object */
+	var summaryCallbacks = new SideTable();
 
-	/**
-	 * This is the observer callback that will read the change records of any path callbacks and then callback the
-	 * path callbacks as appropriate.
-	 * @param  {Array} changeRecords An array of change records for objects being observed
-	 */
-	function pathObserver(changeRecords) {
-		var targetCallbacks,
-			callbacks,
-			name,
-			obj,
-			oldValue,
-			currentValue;
-		changeRecords.forEach(function (changeRecord) {
-			if (changeRecord.type === 'updated') {
-				obj = changeRecord.object;
-				targetCallbacks = pathCallbacks.get(obj);
-				name = changeRecord.name;
-				if (targetCallbacks && name in targetCallbacks) {
-					oldValue = changeRecord.oldValue;
-					currentValue = obj[name];
-					callbacks = targetCallbacks[name];
-					callbacks.forEach(function (callback) {
-						callback.call(obj, oldValue, currentValue);
-					});
+	function summaryObserve(target, callback) {
+		var callbacks,
+			handle;
+
+		function observer(changeRecords) {
+			var added = {},
+				removed = {},
+				changed = {},
+				oldValues = {},
+				oldValueFn,
+				prop,
+				newValue;
+
+			changeRecords.forEach(function (changeRecord) {
+				var type = changeRecord.type,
+					name = changeRecord.name;
+				if (!(name in oldValues)) {
+					oldValues[name] = changeRecord.oldValue;
+				}
+				if (type === 'updated') {
+					return;
+				}
+				if (type === 'new') {
+					if (name in removed) {
+						delete removed[name];
+					}
+					else {
+						added[name] = 1;
+					}
+					return;
+				}
+				/* if (type === 'deleted') */
+				if (name in added) {
+					delete added[name];
+					delete oldValues[name];
+				}
+				else {
+					removed[name] = 1;
+				}
+			});
+
+			for (prop in added) {
+				added[prop] = target[prop];
+			}
+			for (prop in removed) {
+				removed[prop] = undefined;
+			}
+			for (prop in oldValues) {
+				if (prop in added || prop in removed) {
+					continue;
+				}
+				newValue = target[prop];
+				if (oldValues[prop] !== newValue) {
+					changed[prop] = newValue;
 				}
 			}
-		});
+
+			oldValueFn = function (property) {
+				return oldValues[property];
+			};
+
+			callbacks.forEach(function (callback) {
+				callback.call(target, added, removed, changed, oldValueFn);
+			});
+		}
+
+		if (!(typeof target === 'object' || typeof target === 'function')) {
+			throw new Error('target is not an object or function');
+		}
+
+		if (!(callbacks = summaryCallbacks.get(target))) {
+			summaryCallbacks.set(target, callbacks = []);
+			handle = observe(target, observer);
+		}
+
+		callbacks.push(callback);
+
+		return {
+			remove: function () {
+				callbacks.splice(callbacks.indexOf(callback), 1);
+				if (!callbacks.length) {
+					handle.remove();
+					summaryCallbacks['delete'](target);
+				}
+			}
+		};
 	}
+
+	/* Stores any observe.array callbacks on an object */
+	var arrayCallbacks = new SideTable();
+
+	function arrayObserve(target, callback) {
+		//
+	}
+
+	/* Stores any observe.path callbacks on an object */
+	var pathCallbacks = new SideTable();
 
 	/**
 	 * Observe value updates to a targets path (a string where sub-properties are separated by dots (`.`)).  The
@@ -532,12 +604,41 @@ define([
 	 *                             the value before the change and the second being the value after the change
 	 * @return {Object}            A handle with a method of `.remove()`
 	 */
-	function observePath(target, path, callback) {
+	function pathObserve(target, path, callback) {
 		var pathArray = path.split('.'),
 			callbacks,
 			prop,
 			name,
 			handle;
+
+		/**
+		 * This is the observer callback that will read the change records of any path callbacks and then callback the
+		 * path callbacks as appropriate.
+		 * @param  {Array} changeRecords An array of change records for objects being observed
+		 */
+		function observer(changeRecords) {
+			var targetCallbacks,
+				callbacks,
+				name,
+				obj,
+				oldValue,
+				currentValue;
+			changeRecords.forEach(function (changeRecord) {
+				if (changeRecord.type === 'updated') {
+					obj = changeRecord.object;
+					targetCallbacks = pathCallbacks.get(obj);
+					name = changeRecord.name;
+					if (targetCallbacks && name in targetCallbacks) {
+						oldValue = changeRecord.oldValue;
+						currentValue = obj[name];
+						callbacks = targetCallbacks[name];
+						callbacks.forEach(function (callback) {
+							callback.call(obj, oldValue, currentValue);
+						});
+					}
+				}
+			});
+		}
 
 		/* traverse the path */
 		while (pathArray.length) {
@@ -563,7 +664,7 @@ define([
 		if (!(callbacks = pathCallbacks.get(target))) {
 			callbacks = {};
 			pathCallbacks.set(target, callbacks);
-			handle = observe(target, pathObserver, false, [ name ]);
+			handle = observe(target, observer, false, [ name ]);
 		}
 
 		/* determine if this particular property callback is registered */
@@ -581,7 +682,9 @@ define([
 				callbacks[name].splice(callbacks[name].indexOf(callback), 1);
 				if (!callbacks[name].length) {
 					delete callbacks[name];
-					removeObserver(target, pathObserver);
+					if (!keys(target).length) {
+						removeObserver(target, observer);
+					}
 				}
 			}
 		};
@@ -647,9 +750,9 @@ define([
 	defineProperties(observe, {
 		install: getReadOnlyDescriptor(installObservableProperty || noop),
 		uninstall: getReadOnlyDescriptor(uninstallObservableProperty || noop),
-		summary: getReadOnlyDescriptor(null),
-		array: getReadOnlyDescriptor(null),
-		path: getReadOnlyDescriptor(observePath),
+		summary: getReadOnlyDescriptor(summaryObserve),
+		array: getReadOnlyDescriptor(arrayObserve),
+		path: getReadOnlyDescriptor(pathObserve),
 		getNotifier: getReadOnlyDescriptor(getNotifier)
 	});
 

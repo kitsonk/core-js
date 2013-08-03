@@ -94,6 +94,29 @@ define([
 			arr.unshift(1);
 			assert.strictEqual(1, arr.shift(), 'should return first element');
 		});
+		test.suite('observe.summary', function () {
+			test.test('basic', function () {
+				var dfd = this.async(250);
+
+				var obj = {
+					foo: 'bar',
+					baz: 1
+				};
+
+				var callback = dfd.callback(function (added, removed, changed, oldValueFn) {
+					assert.strictEqual('qat', changed.foo);
+					assert.strictEqual(2, changed.baz);
+					assert.deepEqual({}, added);
+					assert.deepEqual({}, removed);
+					assert.strictEqual('bar', oldValueFn('foo'));
+					assert.strictEqual(1, oldValueFn('baz'));
+				});
+
+				observe.summary(obj, callback);
+				obj.foo = 'qat';
+				obj.baz = 2;
+			});
+		});
 		test.suite('observe.path', function () {
 			test.test('basic', function () {
 				var dfd = this.async(250);

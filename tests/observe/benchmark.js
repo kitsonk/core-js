@@ -9,7 +9,7 @@ define([
 
 	bench.benchmark('single property', function () {
 		var obj, handle, count;
-		bench.test('ChangeSummary', {
+		bench.test('ObjectObserver', {
 			'defer': true,
 			'fn': function (dfd) {
 				obj = {
@@ -29,14 +29,14 @@ define([
 				}
 			}
 		});
-		bench.test('observe', {
+		bench.test('observe.summary', {
 			'defer': true,
 			'fn': function (dfd) {
 				obj = {
 					foo: 'bar'
 				};
 
-				handle = observe(obj, function () {
+				handle = observe.summary(obj, function () {
 					if (count >= 5000) {
 						handle.remove();
 						dfd.resolve();
@@ -52,7 +52,7 @@ define([
 
 	bench.benchmark('lots of properties', function () {
 		var obj, handle, count;
-		bench.test('ChangeSummary', {
+		bench.test('PathOberver', {
 			'defer': true,
 			'fn': function (dfd) {
 				obj = {
@@ -74,7 +74,7 @@ define([
 				}
 			}
 		});
-		bench.test('observe', {
+		bench.test('observe.path', {
 			'defer': true,
 			'fn': function (dfd) {
 				obj = {

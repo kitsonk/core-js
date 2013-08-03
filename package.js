@@ -10,6 +10,9 @@ var profile = (function () {
 				'core/node_modules': 1
 			};
 			return (mid in list) ||
+				/^core\/tests\/\w+$/ ||
+				/^core\/node_modules\/\w+$/ ||
+				// /^core\/third_party\/\w+$/ ||
 				/(png|jpg|jpeg|gif|tiff)$/.test(filename);
 		};
 

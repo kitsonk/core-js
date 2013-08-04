@@ -123,7 +123,7 @@ define([
 
 				var obj = { foo: 'bar' };
 
-				var callback = dfd.callback(function (oldValue, newValue) {
+				var callback = dfd.callback(function (newValue, oldValue) {
 					assert.strictEqual('bar', oldValue);
 					assert.strictEqual('qat', newValue);
 					assert.strictEqual(obj, this);
@@ -145,7 +145,7 @@ define([
 					}
 				};
 
-				var callback = dfd.callback(function (oldValue, newValue) {
+				var callback = dfd.callback(function (newValue, oldValue) {
 					assert.strictEqual('foo', oldValue);
 					assert.strictEqual('bar', newValue);
 				});

@@ -122,6 +122,16 @@ define([
 			return changeRecord;
 		};
 
+		var createSpliceChangeRecord = function (object, index, removed, addedCount) {
+			return {
+				type: 'splice',
+				object: object,
+				index: index,
+				removed: removed,
+				addedCount: addedCount
+			};
+		};
+
 		/**
 		 * A class that handles the notification of changes that is weakly mapped to the object being observed
 		 * @param {Object} target The object that is being observed
@@ -309,6 +319,22 @@ define([
 				delete targetObservedProperties[name];
 			}
 		};
+
+		var defineObservableProperty = function (target, name, descriptor) {
+			//
+		};
+
+		var defineObservableProperties = function (target, descriptors) {
+			//
+		};
+
+		var removeObservableProperty = function (target, name) {
+			//
+		};
+
+		var removeObservableProperties = function (target, names) {
+			//
+		};
 	}
 
 	/**
@@ -360,42 +386,64 @@ define([
 			 * @param  {Function} fn The original function being wrapped
 			 * @return {Function}    The newly wrapped function
 			 */
-			var arrayObserver = function (fn) {
+			var arrayAdvice = function (fn) {
 				return function () {
 					var notifier = getNotifier(this),
 						notify = notifier.notify,
 						i;
 
+					function calcObjectChangeRecords(oldArr, newArr) {
+						var oldLength = oldArr.length,
+							newLength = newArr.length,
+							oldValue,
+							newValue,
+							i,
+							changeRecords = [];
+
+						/* iterate through array and find any changes */
+						for (i = 0; i < oldLength; i++) {
+							oldValue = oldArr[i];
+							newValue = newArr[i];
+							if (oldValue !== newValue) {
+								if (typeof newValue === 'undefined') {
+									changeRecords.push(createChangeRecord('deleted', newArr, i, oldValue));
+								}
+								else if (typeof newValue === 'undefined') {
+									changeRecords.push(createChangeRecord('new', newArr, i));
+								}
+								else {
+									changeRecords.push(createChangeRecord('updated', newArr, i, oldValue));
+								}
+							}
+						}
+						for (i = oldLength; i < newLength; i++) {
+							oldValue = oldArr[i];
+							newValue = newArr[i];
+							if (typeof newValue !== 'undefined') {
+								changeRecords.push(createChangeRecord('new', newArr, i));
+							}
+						}
+
+						/* record change in length */
+						if (oldLength !== newLength) {
+							changeRecords.push(createChangeRecord('updated', newArr, 'length', oldLength));
+						}
+
+						return changeRecords;
+					}
+
 					/* save the state of the existing array */
-					var old = this.slice(0),
-						oldLength = this.length;
+					var old = this.slice(0);
 
 					/* execute the original function */
 					var result = fn.apply(this, arguments);
 
-					/* now look for changes in the array */
-					for (i = 0; i < oldLength; i++) {
-						if (old[i] !== this[i]) {
-							if (typeof this[i] === 'undefined') {
-								notify.call(notifier, createChangeRecord('deleted', this, i, old[i]));
-							}
-							else if (typeof old[i] === 'undefined') {
-								notify.call(notifier, createChangeRecord('new', this, i));
-							}
-							else {
-								notify.call(notifier, createChangeRecord('updated', this, i, old[i]));
-							}
-						}
-					}
-					for (i = old.length; i < this.length; i++) {
-						if (typeof this[i] !== 'undefined') {
-							notify.call(notifier, createChangeRecord('new', this, i));
-						}
-					}
+					/* calculate any changes in the array */
+					var changeRecords = calcObjectChangeRecords(old, this);
 
-					/* and verify the length is right */
-					if (oldLength !== this.length) {
-						notify.call(notifier, createChangeRecord('updated', this, 'length', oldLength));
+					/* notify the changes */
+					for (i = 0; i < changeRecords.length; i++) {
+						notify.call(notifier, changeRecords[i]);
 					}
 
 					/* return the original result */
@@ -406,13 +454,13 @@ define([
 			var handles = [];
 
 			/* Here we get advice around each of the original functions which can modify the array. */
-			handles.push(around(array, 'pop', arrayObserver));
-			handles.push(around(array, 'push', arrayObserver));
-			handles.push(around(array, 'reverse', arrayObserver));
-			handles.push(around(array, 'shift', arrayObserver));
-			handles.push(around(array, 'sort', arrayObserver));
-			handles.push(around(array, 'splice', arrayObserver));
-			handles.push(around(array, 'unshift', arrayObserver));
+			handles.push(around(array, 'pop', arrayAdvice));
+			handles.push(around(array, 'push', arrayAdvice));
+			handles.push(around(array, 'reverse', arrayAdvice));
+			handles.push(around(array, 'shift', arrayAdvice));
+			handles.push(around(array, 'sort', arrayAdvice));
+			handles.push(around(array, 'splice', arrayAdvice));
+			handles.push(around(array, 'unshift', arrayAdvice));
 
 			/* We also add `get` and `set` to be able to track changes to the array, since directly watching all the elements
 			 * would be a bit onerous */
@@ -420,7 +468,7 @@ define([
 				get: getHiddenReadOnlyDescriptor(function (idx) {
 					return this[idx];
 				}),
-				set: getHiddenReadOnlyDescriptor(arrayObserver(function (idx, value) {
+				set: getHiddenReadOnlyDescriptor(arrayAdvice(function (idx, value) {
 					this[idx] = value;
 				}))
 			});
@@ -499,6 +547,10 @@ define([
 		var callbacks,
 			handle;
 
+		/**
+		 * This is the observer callback that takes change records and provides back a summary of the changes
+		 * @param  {Array} changeRecords An array of change records
+		 */
 		function observer(changeRecords) {
 			var added = {},
 				removed = {},
@@ -508,6 +560,7 @@ define([
 				prop,
 				newValue;
 
+			/* iterate over each of the change records */
 			changeRecords.forEach(function (changeRecord) {
 				var type = changeRecord.type,
 					name = changeRecord.name;
@@ -552,19 +605,23 @@ define([
 				}
 			}
 
+			/* allows access to the object of old values */
 			oldValueFn = function (property) {
 				return oldValues[property];
 			};
 
+			/* callback the callbacks */
 			callbacks.forEach(function (callback) {
 				callback.call(target, added, removed, changed, oldValueFn);
 			});
 		}
 
+		/* type checking of the target */
 		if (!(typeof target === 'object' || typeof target === 'function')) {
 			throw new Error('target is not an object or function');
 		}
 
+		/* if there is no map of callbacks for this target, we are watching it */
 		if (!(callbacks = summaryCallbacks.get(target))) {
 			summaryCallbacks.set(target, callbacks = []);
 			handle = observe(target, observer);
@@ -572,11 +629,12 @@ define([
 
 		callbacks.push(callback);
 
+		/* return a handle that can be used to removed the observation */
 		return {
 			remove: function () {
 				callbacks.splice(callbacks.indexOf(callback), 1);
 				if (!callbacks.length) {
-					handle.remove();
+					handle && handle.remove();
 					summaryCallbacks['delete'](target);
 				}
 			}
@@ -633,7 +691,7 @@ define([
 						currentValue = obj[name];
 						callbacks = targetCallbacks[name];
 						callbacks.forEach(function (callback) {
-							callback.call(obj, oldValue, currentValue);
+							callback.call(obj, currentValue, oldValue);
 						});
 					}
 				}
@@ -753,7 +811,12 @@ define([
 		summary: getReadOnlyDescriptor(summaryObserve),
 		array: getReadOnlyDescriptor(arrayObserve),
 		path: getReadOnlyDescriptor(pathObserve),
-		getNotifier: getReadOnlyDescriptor(getNotifier)
+		getNotifier: getReadOnlyDescriptor(getNotifier),
+		deliverChangeRecords: getReadOnlyDescriptor(deliverChangeRecords || Object.deliverChangeRecords),
+		defineProperty: getReadOnlyDescriptor(defineObservableProperty || defineProperty),
+		defineProperties: getReadOnlyDescriptor(defineObservableProperties || defineProperties),
+		removeProperty: getReadOnlyDescriptor(noop),
+		removeProperties: getReadOnlyDescriptor(noop)
 	});
 
 	return observe;

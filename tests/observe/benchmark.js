@@ -17,16 +17,16 @@ define([
 				};
 
 				handle = new ObjectObserver(obj, function () {
-					if (count >= 5000) {
+					if (count >= 1000) {
 						handle.close();
 						dfd.resolve();
 					}
 				});
 
-				for (count = 0; count <= 5000; count++) {
+				for (count = 0; count <= 1000; count++) {
 					obj.foo = Math.random();
-					Platform.performMicrotaskCheckpoint();
 				}
+				Platform.performMicrotaskCheckpoint();
 			}
 		});
 		bench.test('observe.summary', {
@@ -37,13 +37,13 @@ define([
 				};
 
 				handle = observe.summary(obj, function () {
-					if (count >= 5000) {
+					if (count >= 1000) {
 						handle.remove();
 						dfd.resolve();
 					}
 				});
 
-				for (count = 0; count <= 5000; count++) {
+				for (count = 0; count <= 1000; count++) {
 					obj.foo = Math.random();
 				}
 			}
@@ -63,15 +63,16 @@ define([
 				}
 
 				handle = new PathObserver(obj, 'foo', function () {
-					if (count >= 5000) {
+					if (count >= 1000) {
 						handle.close();
 						dfd.resolve();
 					}
 				});
 
-				for (count = 0; count <= 5000; count++) {
+				for (count = 0; count <= 1000; count++) {
 					obj.foo = Math.random();
 				}
+				Platform.performMicrotaskCheckpoint();
 			}
 		});
 		bench.test('observe.path', {
@@ -85,13 +86,13 @@ define([
 				}
 
 				handle = observe.path(obj, 'foo', function () {
-					if (count >= 5000) {
+					if (count >= 1000) {
 						handle.remove();
 						dfd.resolve();
 					}
 				});
 
-				for (count = 0; count <= 5000; count++) {
+				for (count = 0; count <= 1000; count++) {
 					obj.foo = Math.random();
 				}
 			}

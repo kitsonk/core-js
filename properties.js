@@ -92,6 +92,21 @@ define([
 		},
 
 		/**
+		 * Creates a pseudo private property, with a supplied value
+		 * @param  {Object} obj   The object that the property should be created on
+		 * @param  {String} name  The name of the property
+		 * @param  {Mixed}  value The value of the property
+		 * @return {Mixed}        The value that was set
+		 */
+		pseudoPrivate: function (obj, name, value) {
+			defineProperty(obj, name, {
+				value: value,
+				configurable: true
+			});
+			return value;
+		},
+
+		/**
 		 * Returns a read only property descriptor
 		 * @param  {Any}    value The value of the property
 		 * @return {Object}       The property descriptor

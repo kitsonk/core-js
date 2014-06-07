@@ -2,7 +2,7 @@
   "name": "core",
   "version": "0.0.3",
   "devDependencies": {
-    "intern": "git+https://github.com/kitsonk/intern.git#3b5185e"
+    "intern": "^1.7.0"
   },
   "licenses": [
     {

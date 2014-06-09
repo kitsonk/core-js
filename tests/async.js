@@ -18,5 +18,12 @@ define([
 
 			assert.strictEqual(value, false, 'should be false before next turn');
 		});
+		test.test('preserves scope', function () {
+			var dfd = this.async(1000);
+
+			async(dfd.callback(function () {
+				assert.equal(this.foo, 'bar', 'this.foo == "bar"');
+			}), { foo: 'bar' });
+		});
 	});
 });

@@ -13,7 +13,7 @@ define([
 	 * [Polymer/mdv](https://github.com/Polymer/mdv/blob/stable/src/template_element.js)
 	 */
 
-	has.add('es6-weak-map', 'undefined' !== typeof WeakMap && navigator.userAgent.indexOf('Firefox/') < 0);
+	has.add('es6-weak-map', WeakMap !== 'undefined');
 
 	var SideTable;
 	if (has('es6-weak-map')) {
@@ -35,9 +35,13 @@ define([
 					value: value,
 					writable: true
 				});
+				return value;
 			},
 			get: function (key) {
 				return hasOwnProperty.call(key, this.name) ? key[this.name] : void 0;
+			},
+			has: function (key) {
+				return hasOwnProperty.call(key, this.name);
 			},
 			'delete': function (key) {
 				this.set(key, void 0);

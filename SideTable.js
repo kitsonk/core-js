@@ -13,7 +13,7 @@ define([
 	 * [Polymer/mdv](https://github.com/Polymer/mdv/blob/stable/src/template_element.js)
 	 */
 
-	has.add('es6-weak-map', WeakMap !== 'undefined');
+	has.add('es6-weak-map', typeof WeakMap !== 'undefined');
 
 	var SideTable;
 	if (has('es6-weak-map')) {

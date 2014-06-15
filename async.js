@@ -11,7 +11,7 @@ define([
 
 	if (typeof process !== 'undefined' && {}.toString.call(process) === '[object process]') {
 		async = function (callback, binding) {
-			process.nextTick(function () {
+			setImmediate(function () {
 				callback.call(binding);
 			});
 		};

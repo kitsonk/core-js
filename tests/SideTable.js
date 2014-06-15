@@ -4,7 +4,7 @@ define([
 	'../SideTable',
 	'../has'
 ], function (test, assert, SideTable, has) {
-	test.suite('SideTable', function () {
+	test.suite('core/SideTable', function () {
 		var st, fn, obj, value;
 		test.test('feature detection', function () {
 			if ('undefined' !== typeof WeakMap) {

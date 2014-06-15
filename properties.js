@@ -111,7 +111,7 @@ define([
 		 * @param  {Any}    value The value of the property
 		 * @return {Object}       The property descriptor
 		 */
-		getReadOnlyDescriptor: function (value) {
+		readOnlyDescriptor: function (value) {
 			return {
 				value: value,
 				enumerable: true,
@@ -124,7 +124,7 @@ define([
 		 * @param  {Any}    value The value of the property
 		 * @return {Object}       The property descriptor
 		 */
-		getHiddenReadOnlyDescriptor: function (value) {
+		hiddenReadOnlyDescriptor: function (value) {
 			return {
 				value: value,
 				configurable: true
@@ -136,11 +136,24 @@ define([
 		 * @param  {Any}    value The value of the property
 		 * @return {Object}       The property descriptor
 		 */
-		getValueDescriptor: function (value) {
+		valueDescriptor: function (value) {
 			return {
 				value: value,
 				writable: true,
 				enumerable: true,
+				configurable: true
+			};
+		},
+
+		/**
+		 * Return a 'hidden' value property descriptor
+		 * @param  {Any}    value The value of the property
+		 * @return {Object}       The property descriptor
+		 */
+		hiddenDescriptor: function (value) {
+			return {
+				value: value,
+				writable: true,
 				configurable: true
 			};
 		}

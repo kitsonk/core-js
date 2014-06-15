@@ -34,21 +34,27 @@ define([
 			// create the remove handler
 			signal = {
 				remove: function () {
-					var previous = signal.previous;
-					var next = signal.next;
-					if (!next && !previous) {
-						delete dispatcher[type];
-					}
-					else {
-						if (previous) {
-							previous.next = next;
+					if (signal.advice) {
+						var previous = signal.previous,
+							next = signal.next;
+
+						if (!next && !previous) {
+							delete dispatcher[type];
 						}
 						else {
-							dispatcher[type] = next;
+							if (previous) {
+								previous.next = next;
+							}
+							else {
+								dispatcher[type] = next;
+							}
+							if (next) {
+								next.previous = previous;
+							}
 						}
-						if (next) {
-							next.previous = previous;
-						}
+
+						// remove the advice to signal that this signal has been removed
+						dispatcher = advice = signal.advice = null;
 					}
 				},
 				id: nextId++,
@@ -86,10 +92,11 @@ define([
 				// no dispatcher in place
 				defineProperty(target, methodName, {
 					value: (dispatcher = function () {
-						var executionId = nextId;
+						var executionId = nextId,
 						// before advice
-						var args = arguments;
-						var before = dispatcher.before;
+							args = arguments,
+							before = dispatcher.before;
+							
 						while (before) {
 							args = before.advice.apply(this, args) || args;
 							before = before.next;

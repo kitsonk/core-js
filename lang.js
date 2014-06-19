@@ -68,25 +68,35 @@ define([
 		}());
 	}
 
+	var global = getGlobal();
+
 	function getProp(/*Array*/parts, /*Boolean*/create, /*Object*/context) {
 		'use strict';
-		var p,
-			i = 0,
-			global = getGlobal();
+		var p, i;
 
 		if (!context) {
-			if (!parts.length) {
-				return global;
-			}
-			else {
-				p = parts[i++];
-				context = p in global ? global[p] : (create ? global[p] = {} : undefined);
-			}
+			context = global;
 		}
-		while (context && (p = parts[i++])) {
-			context = (p in context ? context[p] : (create ? context[p] = {} : undefined));
+		
+		try {
+			for (i = 0; i < parts.length; i++) {
+				p = parts[i];
+				if (!(p in context)) {
+					if (create) {
+						context[p] = {};
+					}
+					else {
+						return; // return undefined
+					}
+				}
+				context = context[p];
+			}
+			return context; // mixed
 		}
-		return context; // mixed
+		catch (e) {
+			// "p in context" throws an exception when context is a number, boolean, etc. rather than an object,
+			// so in that corner case just return undefined (by having no return statement)
+		}
 	}
 
 	var lang = {
@@ -216,7 +226,8 @@ define([
 		 * Arguments to pass to the bound function.
 		 * @returns {function()}
 		 */
-		bind: function (context, method) {
+		bind: function (context, method/*, ...*/) {
+			'use strict';
 			var extra = slice.call(arguments, 2);
 			if (typeof method === 'string') {
 				// late binding
@@ -261,14 +272,14 @@ define([
 			//	|	lang.hitch(foo, function(){ this.bar = 10; })();
 			//		execute an anonymous function in scope of foo
 			if (arguments.length > 2) {
-				return _hitchArgs.apply(window.global, arguments); // Function
+				return _hitchArgs.apply(global, arguments); // Function
 			}
 			if (!method) {
 				method = scope;
 				scope = null;
 			}
 			if (typeof method === 'string') {
-				scope = scope || window.global;
+				scope = scope || global;
 				if (!scope[method]) {
 					throw ([ 'lang.hitch: scope["', method, '"] is null (scope="', scope, '")' ].join(''));
 				}
@@ -282,6 +293,7 @@ define([
 		},
 
 		extend: function (ctor/*, props*/) {
+			'use strict';
 			// summary:
 			//		Adds all properties and methods of props to constructor's
 			//		prototype, making them available to all instances created with
@@ -290,7 +302,7 @@ define([
 			//		Target constructor to extend.
 			// props: Object
 			//		One or more objects to mix into ctor.prototype
-			for (var i=1; i < arguments.length; i++) {
+			for (var i = 1; i < arguments.length; i++) {
 				_mixin(ctor.prototype, arguments[i]);
 			}
 			return ctor; // Object
@@ -348,7 +360,7 @@ define([
 			return getProp(name.split('.'), create, context); // Object
 		},
 
-		getGlobal: getGlobal,
+		global: global,
 
 		exists: function (name, obj) {
 			'use strict';

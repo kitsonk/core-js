@@ -1,7 +1,12 @@
 define([
+	'./aspect',
+	'./async',
 	'./compose',
-	'./dom',
-	'./Deferred',
+	'./lang',
+	// './dom',
+	// './Deferred',
 	'./SideTable',
-	'./when'
+	// './when'
+	// './has',
+	'./Promise'
 ], 1);

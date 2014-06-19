@@ -518,22 +518,24 @@ define([
 				assert(Promise.resolve);
 			});
 			test.suite('if x is a promise, adopt its state', function () {
-				test.test('if x is pending, promise must remain pending until x is fulfilled or rejected', function () {
-					var dfd = this.async(250);
+				if (!has('es6-promises')) {
+					test.test('if x is pending, promise must remain pending until x is fulfilled or rejected', function () {
+						var dfd = this.async(250);
 
-					var expectedValue, resolver, thenable, wrapped;
+						var expectedValue, resolver, thenable, wrapped;
 
-					expectedValue = 'the value';
-					thenable = { then: function (resolve) { resolver = resolve; } };
+						expectedValue = 'the value';
+						thenable = { then: function (resolve) { resolver = resolve; } };
 
-					wrapped = Promise.resolve(thenable);
+						wrapped = Promise.resolve(thenable);
 
-					wrapped.then(dfd.callback(function (value) {
-						assert.strictEqual(value, expectedValue);
-					}));
+						wrapped.then(dfd.callback(function (value) {
+							assert.strictEqual(value, expectedValue);
+						}));
 
-					resolver(expectedValue);
-				});
+						resolver(expectedValue);
+					});
+				}
 				test.test('if/when x is fulfilled, fulfill promise with the same value', function () {
 					var dfd = this.async(250);
 
@@ -611,84 +613,86 @@ define([
 					}));
 				});
 				test.suite('if then is a function, call it with x as this, first argument resolvePromise, and second argument rejectPromise, where', function () {
-					test.test('if/when resolvePromise is called with a value y, run Resolve(promise, y)', function () {
-						var dfd = this.async(250);
+					if (!has('es6-promises')) {
+						test.test('if/when resolvePromise is called with a value y, run Resolve(promise, y)', function () {
+							var dfd = this.async(250);
 
-						var expectedValue, resolver, rejector, thenable, wrapped, calledThis;
+							var expectedValue, resolver, rejector, thenable, wrapped, calledThis;
 
-						thenable = {
-							then: function (resolve, reject) {
-								calledThis = this;
-								resolver = resolve;
-								rejector = reject;
-							}
-						};
+							thenable = {
+								then: function (resolve, reject) {
+									calledThis = this;
+									resolver = resolve;
+									rejector = reject;
+								}
+							};
 
-						expectedValue = 'success';
-						wrapped = Promise.resolve(thenable);
+							expectedValue = 'success';
+							wrapped = Promise.resolve(thenable);
 
-						wrapped.then(dfd.callback(function (success) {
-							assert.strictEqual(calledThis, thenable);
-							assert.strictEqual(success, expectedValue);
-						}));
+							wrapped.then(dfd.callback(function (success) {
+								assert.strictEqual(calledThis, thenable);
+								assert.strictEqual(success, expectedValue);
+							}));
 
-						resolver(expectedValue);
-					});
-					test.test('if/when rejectPromise is called with a reason r, reject promise with r', function () {
-						var dfd = this.async(250);
-
-						var expectedReason, rejector, thenable, wrapped;
-
-						thenable = {
-							then: function (resolve, reject) {
-								rejector = reject;
-							}
-						};
-
-						expectedReason = new Error();
-
-						wrapped = Promise.resolve(thenable);
-
-						wrapped.then(dfd.reject.bind(dfd), dfd.callback(function (reason) {
-							assert.strictEqual(reason, expectedReason);
-						}));
-
-						rejector(expectedReason);
-					});
-					test.test('if both resolvePromise and rejectPromise are called, or multiple calls to the same argument are made, the first call takes precedence, and any further calls are ignored', function () {
-						var dfd = this.async(250);
-
-						var expectedReason, resolver, rejector, thenable, wrapped,
-							calledRejected = 0;
-
-						thenable = {
-							then: function (resolve, reject) {
-								resolver = resolve;
-								rejector = reject;
-							}
-						};
-
-						expectedReason = new Error();
-
-						wrapped = Promise.resolve(thenable);
-
-						wrapped.then(dfd.reject.bind(dfd), function (reason) {
-							calledRejected++;
-							assert.strictEqual(reason, expectedReason);
+							resolver(expectedValue);
 						});
+						test.test('if/when rejectPromise is called with a reason r, reject promise with r', function () {
+							var dfd = this.async(250);
 
-						rejector(expectedReason);
-						rejector(expectedReason);
+							var expectedReason, rejector, thenable, wrapped;
 
-						rejector('foo');
+							thenable = {
+								then: function (resolve, reject) {
+									rejector = reject;
+								}
+							};
 
-						resolver('bar');
-						resolver('baz');
+							expectedReason = new Error();
 
-						setTimeout(dfd.callback(function () {
-							assert.strictEqual(calledRejected, 1);
-						}), 50);
-					});
+							wrapped = Promise.resolve(thenable);
+
+							wrapped.then(dfd.reject.bind(dfd), dfd.callback(function (reason) {
+								assert.strictEqual(reason, expectedReason);
+							}));
+
+							rejector(expectedReason);
+						});
+						test.test('if both resolvePromise and rejectPromise are called, or multiple calls to the same argument are made, the first call takes precedence, and any further calls are ignored', function () {
+							var dfd = this.async(250);
+
+							var expectedReason, resolver, rejector, thenable, wrapped,
+								calledRejected = 0;
+
+							thenable = {
+								then: function (resolve, reject) {
+									resolver = resolve;
+									rejector = reject;
+								}
+							};
+
+							expectedReason = new Error();
+
+							wrapped = Promise.resolve(thenable);
+
+							wrapped.then(dfd.reject.bind(dfd), function (reason) {
+								calledRejected++;
+								assert.strictEqual(reason, expectedReason);
+							});
+
+							rejector(expectedReason);
+							rejector(expectedReason);
+
+							rejector('foo');
+
+							resolver('bar');
+							resolver('baz');
+
+							setTimeout(dfd.callback(function () {
+								assert.strictEqual(calledRejected, 1);
+							}), 50);
+						});
+					}
 					test.suite('if calling then throws an exception e', function () {
 						test.test('if resolvePromise or rejectPromise have been called, ignore it', function () {
 							var dfd = this.async(250);
@@ -776,28 +780,30 @@ define([
 				assert.instanceOf(casted, Promise);
 				assert.notStrictEqual(casted, promise);
 			});
-			test.test('if SameValue(constructor, C) is false, and isPromiseSubClass(C) is true, return PromiseResolve(promise, x)', function () {
-				var dfd = this.async(250);
+			if (!has('es6-promises')) {
+				test.test('if SameValue(constructor, C) is false, and isPromiseSubClass(C) is true, return PromiseResolve(promise, x)', function () {
+					var dfd = this.async(250);
 
-				function PromiseSubclass() {
-					Promise.apply(this, arguments);
-				}
+					function PromiseSubclass() {
+						Promise.apply(this, arguments);
+					}
 
-				PromiseSubclass.prototype = Object.create(Promise.prototype);
-				PromiseSubclass.prototype.constructor = PromiseSubclass;
-				PromiseSubclass.resolve = Promise.resolve;
+					PromiseSubclass.prototype = Object.create(Promise.prototype);
+					PromiseSubclass.prototype.constructor = PromiseSubclass;
+					PromiseSubclass.resolve = Promise.resolve;
 
-				var promise = Promise.resolve(1),
-					casted = PromiseSubclass.resolve(promise);
+					var promise = Promise.resolve(1),
+						casted = PromiseSubclass.resolve(promise);
 
-				assert.instanceOf(casted, Promise);
-				assert.instanceOf(casted, PromiseSubclass);
-				assert.notStrictEqual(casted, promise);
+					assert.instanceOf(casted, Promise);
+					assert.instanceOf(casted, PromiseSubclass);
+					assert.notStrictEqual(casted, promise);
 
-				casted.then(dfd.callback(function (value) {
-					assert.equal(value, 1);
-				}));
-			});
+					casted.then(dfd.callback(function (value) {
+						assert.equal(value, 1);
+					}));
+				});
+			}
 			test.test('if SameValue(constructor, C) is false, and isThenable(C) is false, return PromiseResolve(promise, x)', function () {
 				var value = 1,
 					casted = Promise.resolve(value);

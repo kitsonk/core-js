@@ -1,8 +1,9 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../lang'
-], function (test, assert, lang) {
+	'../lang',
+	'../global'
+], function (test, assert, lang, global) {
 	'use strict';
 
 	test.suite('core/lang', function () {
@@ -196,8 +197,8 @@ define([
 			assert.equal(obj.foo.bar, lang.getObject('foo.bar', false, obj));
 
 			assert.typeOf(lang.getObject('_getObjectTest.bar'), 'undefined');
-			lang.global._getObjectTest = {};
-			assert.equal(lang.global._getObjectTest, lang.getObject('_getObjectTest'));
+			global._getObjectTest = {};
+			assert.equal(global._getObjectTest, lang.getObject('_getObjectTest'));
 			assert.deepEqual(lang.getObject('_getObjectTest.bar', true), {});
 
 			assert.typeOf(lang.getObject('./TestWidget'), 'undefined');
@@ -212,7 +213,6 @@ define([
 			assert.isTrue(lang.exists('foo', obj));
 			assert.isFalse(lang.exists('foo.bar', obj), 'lang.exists("foo.bar", obj)');
 
-			var global = lang.global;
 			assert.isFalse(lang.exists('_existsTest'));
 			global._existsTest = false;
 			assert.isTrue(lang.exists('_existsTest'));

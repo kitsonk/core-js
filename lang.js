@@ -1,11 +1,12 @@
 define([
-	'./properties'
-], function (properties) {
+	'./properties',
+	'./global'
+], function (properties, global) {
+	'use strict';
 
 	var slice = Array.prototype.slice;
 
 	function _mixin(dest, source, copyFunc) {
-		'use strict';
 		// summary:
 		//		Copies/adds all enumerable properties of source to dest; returns dest.
 		// dest: Object
@@ -43,12 +44,10 @@ define([
 	}
 
 	function _toArray(obj, offset, startWith) {
-		'use strict';
 		return (startWith || []).concat(slice.call(obj, offset || 0));
 	}
 
 	function _hitchArgs(scope, method) {
-		'use strict';
 		var pre = _toArray(arguments, 2);
 		var named = typeof method === 'string';
 		return function () {
@@ -61,17 +60,7 @@ define([
 		}; // Function
 	}
 
-	function getGlobal() {
-		// I cannot find anything that provides access to the global scope under "use strict"
-		return (function () {
-			return this;
-		}());
-	}
-
-	var global = getGlobal();
-
 	function getProp(/*Array*/parts, /*Boolean*/create, /*Object*/context) {
-		'use strict';
 		var p, i;
 
 		if (!context) {
@@ -104,7 +93,6 @@ define([
 		//		This module defines Javascript language extensions.
 
 		mixin: function (dest /*, sources...*/) {
-			'use strict';
 			// summary:
 			//		Copies/adds all properties of one or more sources to dest; returns dest.
 			// dest: Object
@@ -151,7 +139,6 @@ define([
 		},
 
 		delegate: function (obj, props) {
-			'use strict';
 			var d = Object.create(typeof obj === 'function' ? obj.prototype : obj || Object.prototype);
 			return props ? _mixin(d, props) : d;
 		},
@@ -188,7 +175,6 @@ define([
 		=====*/
 
 		clone: function (object) {
-			'use strict';
 			var returnValue;
 
 			if (!object || typeof object !== 'object') {
@@ -227,7 +213,6 @@ define([
 		 * @returns {function()}
 		 */
 		bind: function (context, method/*, ...*/) {
-			'use strict';
 			var extra = slice.call(arguments, 2);
 			if (typeof method === 'string') {
 				// late binding
@@ -239,7 +224,6 @@ define([
 		},
 
 		hitch: function (scope, method) {
-			'use strict';
 			// summary:
 			//		Returns a function that will only ever execute in the a given scope.
 			//		This allows for easy use of object member functions
@@ -293,7 +277,6 @@ define([
 		},
 
 		extend: function (ctor/*, props*/) {
-			'use strict';
 			// summary:
 			//		Adds all properties and methods of props to constructor's
 			//		prototype, making them available to all instances created with
@@ -309,7 +292,6 @@ define([
 		},
 
 		setObject: function (name, value, context) {
-			'use strict';
 			// summary:
 			//		Set a property from a dot-separated string, such as "A.B.C"
 			// description:
@@ -343,7 +325,6 @@ define([
 		},
 
 		getObject: function (name, create, context) {
-			'use strict';
 			// summary:
 			//		Get a property from a dot-separated string, such as "A.B.C"
 			// description:
@@ -360,10 +341,7 @@ define([
 			return getProp(name.split('.'), create, context); // Object
 		},
 
-		global: global,
-
 		exists: function (name, obj) {
-			'use strict';
 			// summary:
 			//		determine if an object supports a given method
 			// description:

@@ -21,6 +21,7 @@ define([
 				assert('set' in st);
 				assert('delete' in st);
 				assert('name' in st);
+				assert('has' in st);
 				var st2 = new SideTable();
 				assert(st.name !== st2.name);
 			});
@@ -40,6 +41,11 @@ define([
 				assert(st.get(fn) === value);
 				st.get(fn).foo = 'baz';
 				assert(value.foo === 'baz');
+			});
+			test.test('name', function () {
+				assert.isTrue(st.has(fn));
+				var fn2 = function () {};
+				assert.isFalse(st.has(fn2));
 			});
 			test.test('delete', function () {
 				assert(st.get(obj));

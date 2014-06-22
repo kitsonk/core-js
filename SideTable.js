@@ -21,8 +21,7 @@ define([
 	}
 	else {
 		var defineProperty = Object.defineProperty,
-			hasOwnProperty = Object.hasOwnProperty,
-			uid = new Date().getTime() % 1e9;
+			uid = Date.now() % 1e9;
 
 		SideTable = function SideTable() {
 			/* Assign a GUID */
@@ -31,20 +30,28 @@ define([
 
 		SideTable.prototype = {
 			set: function (key, value) {
-				defineProperty(key, this.name, {
-					value: value,
-					writable: true
-				});
+				var entry = key[this.name];
+				if (entry && entry[0] === key) {
+					entry[1] = value;
+				}
+				else {
+					defineProperty(key, this.name, {
+						value: [key, value],
+						writable: true
+					});
+				}
 				return value;
 			},
 			get: function (key) {
-				return hasOwnProperty.call(key, this.name) ? key[this.name] : void 0;
+				var entry;
+				return (entry = key[this.name]) && entry[0] === key ? entry[1] : undefined;
 			},
 			has: function (key) {
-				return hasOwnProperty.call(key, this.name);
+				var entry;
+				return !!((entry = key[this.name]) && entry[0] === key);
 			},
 			'delete': function (key) {
-				this.set(key, void 0);
+				this.set(key, undefined);
 			}
 		};
 	}

@@ -1,331 +1,209 @@
 define([
-	'./has',
+	'./aspect',
+	'./async',
+	'./lang',
 	'./errors/CancelError',
-	'./promise/Promise',
-	'./has!config-deferredInstrumentation?./promise/instrumentation'
-], function (has, CancelError, Promise, instrumentation) {
+	'./Promise',
+	'./SideTable'
+], function (aspect, async, lang, CancelError, Promise, SideTable) {
 	'use strict';
 
-	// module:
-	//		dojo/Deferred
-
-	var PROGRESS = 0,
-		RESOLVED = 1,
-		REJECTED = 2;
 	var FULFILLED_ERROR_MESSAGE = 'This deferred has already been fulfilled.';
 
-	var freezeObject = Object.freeze || function () {};
+	var around = aspect.around;
 
-	var signalWaiting = function (waiting, type, result, rejection, deferred) {
-		if (has('config-deferredInstrumentation')) {
-			if (type === REJECTED && Deferred.instrumentRejected && waiting.length === 0) {
-				Deferred.instrumentRejected(result, false, rejection, deferred);
-			}
-		}
+	var progressSubscribers = new SideTable();
 
-		for (var i = 0; i < waiting.length; i++) {
-			signalListener(waiting[i], type, result, rejection);
-		}
-	};
+	function publish(deferred, update) {
+		var subscribers = progressSubscribers.get(deferred),
+			callback,
+			result;
 
-	var signalListener = function (listener, type, result, rejection) {
-		var func = listener[type];
-		var deferred = listener.deferred;
-		if (func) {
-			try {
-				var newResult = func(result);
-				if (type === PROGRESS) {
-					if (typeof newResult !== 'undefined') {
-						signalDeferred(deferred, type, newResult);
+		if (subscribers.length) {
+			async(function () {
+				for (var i = 0; i < subscribers.length; i++) {
+					if (typeof result !== 'undefined') {
+						update = result;
 					}
+					callback = subscribers[i];
+					result = callback(update);
 				}
-				else {
-					if (newResult && typeof newResult.then === 'function') {
-						listener.cancel = newResult.cancel;
-						newResult.then(
-								// Only make resolvers if they're actually going to be used
-								makeDeferredSignaler(deferred, RESOLVED),
-								makeDeferredSignaler(deferred, REJECTED),
-								makeDeferredSignaler(deferred, PROGRESS));
-						return;
-					}
-					signalDeferred(deferred, RESOLVED, newResult);
+			});
+		}
+	}
+
+	/**
+	 * Creates a new deferred, as an abstraction over (primarily) asynchronous operations. The deferred is the private
+	 * interface that should not be returned to calling code.  That's what the `promise` is for.  See `core/Promise`.
+	 * @param {Function} canceller Will be invoked if the deferred is cancelled.  The canceller receives the reason
+	 *                             the deferred was cancelled as its argument.  The deferred is rejected with its
+	 *                             return value, or a new `core/errors/CancelError` instance.
+	 */
+	var Deferred = function (canceller) {
+		var resolver, rejector,
+			pending = false,
+			resolved = false,
+			rejected = false,
+			canceled = false;
+
+		/* Create a promise for the deferred that also traps resolution in order to support querying the status
+			of the promise. */
+		var promise = this.promise = new Promise(function (resolve, reject) {
+				resolver = resolve;
+				rejector = reject;
+			}).then(function (value) {
+				resolved = true;
+				pending = false;
+				return value;
+			}, function (reason) {
+				rejected = true;
+				pending = false;
+				throw reason;
+			});
+
+		/* Provide a mechanism to wrap the promise.then so it can support accepting a progress handler, but all
+			progress listeners will actuablly be attached to the deferred, since ES6 Promises don't support the
+			concept */
+		var aroundPromise = function (promiseThen) {
+			return function (callback, errback, progback) {
+				if (progback) {
+					progressSubscribers.get(deferred).push(progback);
 				}
-			}
-			catch (error) {
-				signalDeferred(deferred, REJECTED, error);
-			}
-		}
-		else {
-			signalDeferred(deferred, type, result);
-		}
-
-		if (has('config-deferredInstrumentation')) {
-			if (type === REJECTED && Deferred.instrumentRejected) {
-				Deferred.instrumentRejected(result, !!func, rejection, deferred.promise);
-			}
-		}
-	};
-
-	var makeDeferredSignaler = function (deferred, type) {
-		return function (value) {
-			signalDeferred(deferred, type, value);
+				var p = promiseThen.call(this, callback, errback);
+				around(p, 'then', lang.bind(p, aroundPromise));
+				return p;
+			};
 		};
-	};
 
-	var signalDeferred = function (deferred, type, result) {
-		if (!deferred.isCanceled()) {
-			switch (type) {
-			case PROGRESS:
-				deferred.progress(result);
-				break;
-			case RESOLVED:
-				deferred.resolve(result);
-				break;
-			case REJECTED:
-				deferred.reject(result);
-				break;
-			}
-		}
-	};
-
-	var Deferred = function (canceler) {
-		// summary:
-		//		Creates a new deferred. This API is preferred over
-		//		`dojo/_base/Deferred`.
-		// description:
-		//		Creates a new deferred, as an abstraction over (primarily)
-		//		asynchronous operations. The deferred is the private interface
-		//		that should not be returned to calling code. That's what the
-		//		`promise` is for. See `dojo/promise/Promise`.
-		// canceler: Function?
-		//		Will be invoked if the deferred is canceled. The canceler
-		//		receives the reason the deferred was canceled as its argument.
-		//		The deferred is rejected with its return value, or a new
-		//		`dojo/errors/CancelError` instance.
-
-		// promise: dojo/promise/Promise
-		//		The public promise object that clients can add callbacks to. 
-		var promise = this.promise = new Promise();
+		around(promise, 'then', aroundPromise);
 
 		var deferred = this;
-		var fulfilled, result, rejection;
-		var canceled = false;
-		var waiting = [];
 
-		if (has('config-deferredInstrumentation') && Error.captureStackTrace) {
-			Error.captureStackTrace(deferred, Deferred);
-			Error.captureStackTrace(promise, Deferred);
-		}
+		/* Initiate the SideTable for this instance of the deferred */
+		progressSubscribers.set(deferred, []);
 
-		this.isResolved = promise.isResolved = function () {
-			// summary:
-			//		Checks whether the deferred has been resolved.
-			// returns: Boolean
-
-			return fulfilled === RESOLVED;
+		/**
+		 * Returns if the particular deferred has been resolved.  Deferreds are 
+		 * @return {Boolean} Returns `true` if resolved or `false` if not resolved.
+		 */
+		this.isResolved = function () {
+			return resolved;
 		};
 
-		this.isRejected = promise.isRejected = function () {
-			// summary:
-			//		Checks whether the deferred has been rejected.
-			// returns: Boolean
-
-			return fulfilled === REJECTED;
+		/**
+		 * Returns if the particular deferred has been rejected.
+		 * @return {Boolean} Returns `true` if rejected or `false` if not rejected.
+		 */
+		this.isRejected = function () {
+			return rejected;
 		};
 
-		this.isFulfilled = promise.isFulfilled = function () {
-			// summary:
-			//		Checks whether the deferred has been resolved or rejected.
-			// returns: Boolean
-
-			return !!fulfilled;
+		/**
+		 * Returns if a deferred has been either rejected or resolved.
+		 * @return {Boolean} Returns `true` if fulfilled or `false` if not fulfilled.
+		 */
+		this.isFulfilled = function () {
+			return resolved || rejected;
 		};
 
-		this.isCanceled = promise.isCanceled = function () {
-			// summary:
-			//		Checks whether the deferred has been canceled.
-			// returns: Boolean
-
+		/**
+		 * Returns if a deferred has been cancelled
+		 * @return {Boolean} Returns `true` if cancelled or `false` if not cancelled.
+		 */
+		this.isCanceled = function () {
 			return canceled;
 		};
 
+		/**
+		 * Publishes a progress event, providing the update to the listener
+		 * @param  {Mixed}   update The update to send to any listeners
+		 * @param  {Boolean} strict If `true` and the deferred is fulfilled, then throw an error
+		 * @return {Promise}        Returns the promise related to the deferred
+		 */
 		this.progress = function (update, strict) {
-			// summary:
-			//		Emit a progress update on the deferred.
-			// description:
-			//		Emit a progress update on the deferred. Progress updates
-			//		can be used to communicate updates about the asynchronous
-			//		operation before it has finished.
-			// update: any
-			//		The progress update. Passed to progbacks.
-			// strict: Boolean?
-			//		If strict, will throw an error if the deferred has already
-			//		been fulfilled and consequently no progress can be emitted.
-			// returns: dojo/promise/Promise
-			//		Returns the original promise for the deferred.
-
-			if (!fulfilled) {
-				signalWaiting(waiting, PROGRESS, update, null, deferred);
+			if (!(rejected || resolved || pending)) {
+				publish(deferred, update);
 				return promise;
 			}
 			else if (strict === true) {
 				throw new Error(FULFILLED_ERROR_MESSAGE);
 			}
-			else {
-				return promise;
-			}
+			return promise;
 		};
 
+		/**
+		 * Resolve the deferred with the provided value
+		 * @param  {Mixed}   value  The value to resolve the deferred with
+		 * @param  {Boolean} strict If `true` and the deferred is fulfilled, then throw an error
+		 * @return {Promise}        Returns the promise related to the deferred
+		 */
 		this.resolve = function (value, strict) {
-			// summary:
-			//		Resolve the deferred.
-			// description:
-			//		Resolve the deferred, putting it in a success state.
-			// value: any
-			//		The result of the deferred. Passed to callbacks.
-			// strict: Boolean?
-			//		If strict, will throw an error if the deferred has already
-			//		been fulfilled and consequently cannot be resolved.
-			// returns: dojo/promise/Promise
-			//		Returns the original promise for the deferred.
-
-			if (!fulfilled) {
-				// Set fulfilled, store value. After signaling waiting listeners unset
-				// waiting.
-				signalWaiting(waiting, fulfilled = RESOLVED, result = value, null, deferred);
-				waiting = null;
-				return promise;
-			}
-			else if (strict === true) {
+			if ((rejected || resolved || pending) && strict) {
 				throw new Error(FULFILLED_ERROR_MESSAGE);
 			}
-			else {
-				return promise;
-			}
+			pending = true;
+			resolver(value);
+			return promise;
 		};
 
-		var reject = this.reject = function (error, strict) {
-			// summary:
-			//		Reject the deferred.
-			// description:
-			//		Reject the deferred, putting it in an error state.
-			// error: any
-			//		The error result of the deferred. Passed to errbacks.
-			// strict: Boolean?
-			//		If strict, will throw an error if the deferred has already
-			//		been fulfilled and consequently cannot be rejected.
-			// returns: dojo/promise/Promise
-			//		Returns the original promise for the deferred.
-
-			if (!fulfilled) {
-				if (has('config-deferredInstrumentation') && Error.captureStackTrace) {
-					Error.captureStackTrace(rejection = {}, reject);
-				}
-				signalWaiting(waiting, fulfilled = REJECTED, result = error, rejection, deferred);
-				waiting = null;
-				return promise;
-			}
-			else if (strict === true) {
+		/**
+		 * Reject the deferred with the supplied reason
+		 * @param  {Mixed} reason The reason for rejecting the promise (usually an error)
+		 * @param  {Boolean} strict If `true` and the deferred is fulfilled, then throw an error
+		 * @return {Promise}        Returns the promise related to the deferred
+		 */
+		this.reject = function (reason, strict) {
+			if ((rejected || resolved || pending) && strict) {
 				throw new Error(FULFILLED_ERROR_MESSAGE);
 			}
-			else {
-				return promise;
-			}
+			pending = true;
+			rejector(reason);
+			return promise;
 		};
 
-		this.then = promise.then = function (callback, errback, progback) {
-			// summary:
-			//		Add new callbacks to the deferred.
-			// description:
-			//		Add new callbacks to the deferred. Callbacks can be added
-			//		before or after the deferred is fulfilled.
-			// callback: Function?
-			//		Callback to be invoked when the promise is resolved.
-			//		Receives the resolution value.
-			// errback: Function?
-			//		Callback to be invoked when the promise is rejected.
-			//		Receives the rejection error.
-			// progback: Function?
-			//		Callback to be invoked when the promise emits a progress
-			//		update. Receives the progress update.
-			// returns: dojo/promise/Promise
-			//		Returns a new promise for the result of the callback(s).
-			//		This can be used for chaining many asynchronous operations.
+		/**
+		 * Provide the callbacks for when the deferred is fulfilled or signals progress
+		 * @param  {Function|Promise}  callback The function or promise to invoke when the deferred is resolved
+		 * @param  {Function|Promise?} errback The function or promise to invoke when the deferred is rejected
+		 * @param  {Function?}         progback The function to invoke when the deferred signals progress
+		 * @return {Promise}           A new promise that will be fulfilled when this one is fulfilled
+		 */
+		this.then = lang.bind(promise, promise.then);
 
-			var listener = [progback, callback, errback];
-			// Ensure we cancel the promise we're waiting for, or if callback/errback
-			// have returned a promise, cancel that one.
-			listener.cancel = promise.cancel;
-			listener.deferred = new Deferred(function (reason) {
-				// Check whether cancel is really available, returned promises are not
-				// required to expose `cancel`
-				return listener.cancel && listener.cancel(reason);
-			});
-			if (fulfilled && !waiting) {
-				signalListener(listener, fulfilled, result, rejection);
-			}
-			else {
-				waiting.push(listener);
-			}
-			return listener.deferred.promise;
-		};
-
-		this.cancel = promise.cancel = function (reason, strict) {
-			// summary:
-			//		Inform the deferred it may cancel its asynchronous operation.
-			// description:
-			//		Inform the deferred it may cancel its asynchronous operation.
-			//		The deferred's (optional) canceler is invoked and the
-			//		deferred will be left in a rejected state. Can affect other
-			//		promises that originate with the same deferred.
-			// reason: any
-			//		A message that may be sent to the deferred's canceler,
-			//		explaining why it's being canceled.
-			// strict: Boolean?
-			//		If strict, will throw an error if the deferred has already
-			//		been fulfilled and consequently cannot be canceled.
-			// returns: any
-			//		Returns the rejection reason if the deferred was canceled
-			//		normally.
-
+		/**
+		 * Cancel the deferred
+		 * @param  {Mixed}   reason The reason the deferred is being cancelled
+		 * @param  {Boolean} strict If the deferred is already fulfilled and `true` then throw an error
+		 * @return {Mixed}          The final reason the deferred was cancelled
+		 */
+		this.cancel = function (reason, strict) {
+			var fulfilled = (rejected || resolved || pending);
 			if (!fulfilled) {
 				// Cancel can be called even after the deferred is fulfilled
-				if (canceler) {
-					var returnedReason = canceler(reason);
+				if (canceller) {
+					var returnedReason = canceller(reason);
 					reason = typeof returnedReason === 'undefined' ? reason : returnedReason;
 				}
 				canceled = true;
 				if (!fulfilled) {
-					// Allow canceler to provide its own reason, but fall back to a CancelError
+					// Allow canceller to provide its own reason, but fall back to a CancelError
 					if (typeof reason === 'undefined') {
 						reason = new CancelError();
 					}
-					reject(reason);
-					return reason;
+					pending = true;
+					rejector(reason);
 				}
-				else if (fulfilled === REJECTED && result === reason) {
-					return reason;
-				}
+				return reason;
 			}
-			else if (strict === true) {
+			if (strict === true) {
 				throw new Error(FULFILLED_ERROR_MESSAGE);
 			}
 		};
-
-		freezeObject(promise);
 	};
 
 	Deferred.prototype.toString = function () {
-		// returns: String
-		//		Returns `[object Deferred]`.
-
 		return '[object Deferred]';
 	};
-
-	if (instrumentation) {
-		instrumentation(Deferred);
-	}
 
 	return Deferred;
 });

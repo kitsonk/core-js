@@ -2,37 +2,36 @@ define([
 	'intern!tdd',
 	'intern/chai!assert',
 	'../Deferred',
+	'../Promise',
 	'../errors/CancelError'
-], function (test, assert, Deferred, CancelError) {
-	/* global Promise */
+], function (test, assert, Deferred, Promise, CancelError) {
+
 	test.suite('core/Deferred', function () {
-		var deferred, canceler;
+		var deferred, canceller;
 
 		test.beforeEach(function () {
-			canceler = function () {};
+			canceller = function () {};
 			deferred = new Deferred(function (reason) {
-				return canceler(reason);
+				return canceller(reason);
 			});
 		});
 
 		test.test('deferred receives result after resolving', function () {
-			var obj = {},
-				received;
-			deferred.then(function (result) {
-				received = result;
-			});
+			var dfd = this.async(100);
+			var obj = {};
+			deferred.then(dfd.callback(function (result) {
+				assert.strictEqual(result, obj);
+			}));
 			deferred.resolve(obj);
-			assert.strictEqual(received, obj);
 		});
 
 		test.test('promise receives result after resolving', function () {
-			var obj = {},
-				received;
-			deferred.promise.then(function (result) {
-				received = result;
-			});
+			var dfd = this.async(100);
+			var obj = {};
+			deferred.promise.then(dfd.callback(function (result) {
+				assert.strictEqual(result, obj);
+			}));
 			deferred.resolve(obj);
-			assert.strictEqual(received, obj);
 		});
 
 		test.test('resolve() returns promise', function () {
@@ -43,59 +42,75 @@ define([
 		});
 
 		test.test('isResolved() returns true after resolving', function () {
+			var dfd = this.async(100);
 			assert.isFalse(deferred.isResolved());
 			deferred.resolve();
-			assert.isTrue(deferred.isResolved());
+			setTimeout(dfd.callback(function () {
+				assert.isTrue(deferred.isResolved());
+			}), 50);
 		});
 		test.test('isFulfilled() returns true after resolving', function () {
+			var dfd = this.async(100);
 			assert.isFalse(deferred.isFulfilled());
 			deferred.resolve();
-			assert.isTrue(deferred.isFulfilled());
+			setTimeout(dfd.callback(function () {
+				assert.isTrue(deferred.isFulfilled());
+			}));
 		});
 
 		test.test('resolve() is ignored after having been fulfilled', function () {
+			var dfd = this.async(100);
 			deferred.resolve();
-			deferred.resolve();
+			setTimeout(dfd.callback(function () {
+				deferred.resolve();
+			}), 50);
 		});
 
 		test.test('resolve() throws error after having been fulfilled and strict', function () {
+			var dfd = this.async(100);
 			deferred.resolve();
-			assert.throws(function () {
-				deferred.resolve({}, true);
-			}, Error);
+			setTimeout(dfd.callback(function () {
+				assert.throws(function () {
+					deferred.resolve({}, true);
+				}, Error);
+			}), 10);
 		});
 
 		test.test('resolve() results are cached', function () {
+			var dfd = this.async(100);
 			var obj = {};
-			var received;
 			deferred.resolve(obj);
-			deferred.then(function (result) { received = result; });
-			assert.strictEqual(received, obj);
+			deferred.then(dfd.callback(function (result) {
+				assert.strictEqual(result, obj);
+			}));
 		});
 
 		test.test('resolve() is already bound to the deferred', function () {
+			var dfd = this.async(100);
 			var obj = {};
-			var received;
-			deferred.then(function (result) { received = result; });
+			deferred.then(dfd.callback(function (result) {
+				assert.strictEqual(result, obj);
+			}));
 			var resolve = deferred.resolve;
 			resolve(obj);
-			assert.strictEqual(received, obj);
 		});
 
 		test.test('deferred receives result after rejecting', function () {
+			var dfd = this.async(100);
 			var obj = {};
-			var received;
-			deferred.then(null, function (result) { received = result; });
+			deferred.then(null, dfd.callback(function (result) {
+				assert.strictEqual(result, obj);
+			}));
 			deferred.reject(obj);
-			assert.strictEqual(received, obj);
 		});
 
 		test.test('promise receives result after rejecting', function () {
+			var dfd = this.async(100);
 			var obj = {};
-			var received;
-			deferred.promise.then(null, function (result) { received = result; });
+			deferred.promise.then(null, dfd.callback(function (result) {
+				assert.strictEqual(result, obj);
+			}));
 			deferred.reject(obj);
-			assert.strictEqual(received, obj);
 		});
 
 		test.test('reject() returns promise', function () {
@@ -106,15 +121,21 @@ define([
 		});
 
 		test.test('isRejected() returns true after rejecting', function () {
+			var dfd = this.async(100);
 			assert.isFalse(deferred.isRejected());
 			deferred.reject();
-			assert.isTrue(deferred.isRejected());
+			setTimeout(dfd.callback(function () {
+				assert.isTrue(deferred.isRejected());
+			}), 50);
 		});
 
 		test.test('isFulfilled() returns true after rejecting', function () {
+			var dfd = this.async(100);
 			assert.isFalse(deferred.isFulfilled());
 			deferred.reject();
-			assert.isTrue(deferred.isFulfilled());
+			setTimeout(dfd.callback(function () {
+				assert.isTrue(deferred.isFulfilled());
+			}));
 		});
 
 		test.test('reject() is ignored after having been fulfilled', function () {
@@ -130,36 +151,41 @@ define([
 		});
 
 		test.test('reject() results are cached', function () {
+			var dfd = this.async(100);
 			var obj = {};
-			var received;
 			deferred.reject(obj);
-			deferred.then(null, function (result) { received = result; });
-			assert.strictEqual(received, obj);
+			deferred.then(null, dfd.callback(function (result) {
+				assert.strictEqual(result, obj);
+			}));
 		});
 
 		test.test('reject() is already bound to the deferred', function () {
+			var dfd = this.async(100);
 			var obj = {};
-			var received;
-			deferred.then(null, function (result) { received = result; });
+			deferred.then(null, dfd.callback(function (result) {
+				assert.strictEqual(result, obj);
+			}));
 			var reject = deferred.reject;
 			reject(obj);
-			assert.strictEqual(received, obj);
 		});
 
 		test.test('deferred receives result after progress', function () {
+			var dfd = this.async(100);
 			var obj = {};
-			var received;
-			deferred.then(null, null, function (result) { received = result; });
+			deferred.then(null, null, dfd.callback(function (result) {
+				assert.strictEqual(result, obj);
+			}));
 			deferred.progress(obj);
-			assert.strictEqual(received, obj);
 		});
 
-		test.test('promise receives result after progres', function () {
+		/* This is the one test cannot be addressed with ES6 Promises */
+		test.test('promise receives result after progress', function () {
+			var dfd = this.async(100);
 			var obj = {};
-			var received;
-			deferred.promise.then(null, null, function (result) { received = result; });
+			deferred.promise.then(null, null, dfd.callback(function (result) {
+				assert.strictEqual(result, obj);
+			}));
 			deferred.progress(obj);
-			assert.strictEqual(received, obj);
 		});
 
 		test.test('progress() returns promise', function () {
@@ -189,7 +215,7 @@ define([
 
 		test.test('progress() is ignored after having been fulfilled', function () {
 			deferred.resolve();
-			deferred.resolve();
+			deferred.progress();
 		});
 
 		test.test('progress() throws error after having been fulfilled and strict', function () {
@@ -200,76 +226,90 @@ define([
 		});
 
 		test.test('progress() results are not cached', function () {
+			var dfd = this.async(100);
 			var obj1 = {}, obj2 = {};
 			var received = [];
 			deferred.progress(obj1);
-			deferred.then(null, null, function (result) { received.push(result); });
+			deferred.then(dfd.callback(function () {
+				assert.strictEqual(received[0], obj2);
+				assert.strictEqual(1, received.length);
+			}), null, function (result) {
+				received.push(result);
+				deferred.resolve();
+			});
 			deferred.progress(obj2);
-			assert.strictEqual(received[0], obj2);
-			assert.strictEqual(1, received.length);
 		});
 
-		test.test('progress() with chaining', function () {
-			var obj = {};
-			var inner = new Deferred();
-			var received;
-			deferred.then(function () { return inner; }).then(null, null, function (result) { received = result; });
-			deferred.resolve();
-			inner.progress(obj);
-			assert.strictEqual(received, obj);
-		});
+		// test.test('progress() with chaining', function () {
+		// 	var dfd = this.async(100);
+		// 	var obj = {};
+		// 	var inner = new Deferred();
+		// 	deferred.then(function () { return inner; }).then(null, null, dfd.callback(function (result) {
+		// 		assert.strictEqual(result, obj);
+		// 	}));
+		// 	deferred.resolve();
+		// 	inner.progress(obj);
+		// });
 
 		test.test('after progress(), the progback return value is emitted on the returned promise', function () {
-			var received;
+			var dfd = this.async(100);
 			var promise = deferred.then(null, null, function (n) { return n * n; });
-			promise.then(null, null, function (n) { received = n; });
+			promise.then(null, null, dfd.callback(function (n) {
+				assert.strictEqual(4, n);
+			}));
 			deferred.progress(2);
-			assert.strictEqual(4, received);
 		});
 
 		test.test('progress() is already bound to the deferred', function () {
+			var dfd = this.async(100);
 			var obj = {};
-			var received;
-			deferred.then(null, null, function (result) { received = result; });
+			deferred.then(null, null, dfd.callback(function (result) {
+				assert.strictEqual(result, obj);
+			}));
 			var progress = deferred.progress;
 			progress(obj);
-			assert.strictEqual(received, obj);
 		});
 
-		test.test('cancel() invokes a canceler', function () {
+		test.test('cancel() invokes a canceller', function () {
 			var invoked;
-			canceler = function () { invoked = true; };
+			canceller = function () { invoked = true; };
 			deferred.cancel();
 			assert.isTrue(invoked);
 		});
 
-		test.test('isCanceled() returns true after canceling', function () {
+		test.test('isCanceled() returns true after cancelling', function () {
 			assert.isFalse(deferred.isCanceled());
 			deferred.cancel();
 			assert.isTrue(deferred.isCanceled());
 		});
 
-		test.test('isResolved() returns false after canceling', function () {
+		test.test('isResolved() returns false after cancelling', function () {
 			assert.isFalse(deferred.isResolved());
 			deferred.cancel();
 			assert.isFalse(deferred.isResolved());
 		});
 
-		test.test('isRejected() returns true after canceling', function () {
+		test.test('isRejected() returns true after cancelling', function () {
+			var dfd = this.async(100);
 			assert.isFalse(deferred.isRejected());
 			deferred.cancel();
-			assert.isTrue(deferred.isRejected());
+			setTimeout(dfd.callback(function () {
+				assert.isTrue(deferred.isRejected());
+			}), 10);
 		});
 
-		test.test('isFulfilled() returns true after canceling', function () {
+		test.test('isFulfilled() returns true after cancelling', function () {
+			var dfd = this.async(100);
 			assert.isFalse(deferred.isFulfilled());
 			deferred.cancel();
-			assert.isTrue(deferred.isFulfilled());
+			setTimeout(dfd.callback(function () {
+				assert.isTrue(deferred.isFulfilled());
+			}), 50);
 		});
 
 		test.test('cancel() is ignored after having been fulfilled', function () {
 			var canceled = false;
-			canceler = function () { canceled = true; };
+			canceller = function () { canceled = true; };
 			deferred.resolve();
 			deferred.cancel();
 			assert.isFalse(canceled);
@@ -283,10 +323,11 @@ define([
 		});
 
 		test.test('cancel() without reason results in CancelError', function () {
+			var dfd = this.async(100);
 			var reason = deferred.cancel();
-			var received;
-			deferred.then(null, function (result) { received = result; });
-			assert(received, reason);
+			deferred.then(null, dfd.callback(function (result) {
+				assert.strictEqual(result, reason);
+			}));
 		});
 
 		test.test('cancel() returns default reason', function () {
@@ -294,33 +335,34 @@ define([
 			assert(reason instanceof CancelError);
 		});
 
-		test.test('reason is passed to canceler', function () {
+		test.test('reason is passed to canceller', function () {
 			var obj = {};
 			var received;
-			canceler = function (reason) { received = reason; };
+			canceller = function (reason) { received = reason; };
 			deferred.cancel(obj);
 			assert.strictEqual(received, obj);
 		});
 
-		test.test('cancels with reason returned from canceler', function () {
+		test.test('cancels with reason returned from canceller', function () {
+			var dfd = this.async(100);
 			var obj = {};
-			var received;
-			canceler = function () { return obj; };
+			canceller = function () { return obj; };
 			deferred.cancel();
-			deferred.then(null, function (reason) { received = reason; });
-			assert.strictEqual(received, obj);
+			deferred.then(null, dfd.callback(function (reason) {
+				assert.strictEqual(reason, obj);
+			}));
 		});
 
-		test.test('cancel() returns reason from canceler', function () {
+		test.test('cancel() returns reason from canceller', function () {
 			var obj = {};
-			canceler = function () { return obj; };
+			canceller = function () { return obj; };
 			var reason = deferred.cancel();
 			assert.strictEqual(reason, obj);
 		});
 
-		test.test('cancel() returns reason from canceler, if canceler rejects with reason', function () {
+		test.test('cancel() returns reason from canceller, if canceller rejects with reason', function () {
 			var obj = {};
-			canceler = function () {
+			canceller = function () {
 				deferred.reject(obj);
 				return obj;
 			};
@@ -328,117 +370,127 @@ define([
 			assert.strictEqual(reason, obj);
 		});
 
-		test.test('with canceler not returning anything, returns default CancelError', function () {
-			canceler = function () {};
+		test.test('with canceller not returning anything, returns default CancelError', function () {
+			var dfd = this.async(100);
+			canceller = function () {};
 			var reason = deferred.cancel();
-			var received;
-			deferred.then(null, function (result) { received = result; });
-			assert.strictEqual(received, reason);
+			deferred.then(null, dfd.callback(function (result) {
+				assert.strictEqual(result, reason);
+			}));
 		});
 
-		test.test('with canceler not returning anything, still returns passed reason', function () {
+		test.test('with canceller not returning anything, still returns passed reason', function () {
+			var dfd = this.async(100);
 			var obj = {};
-			var received;
-			canceler = function () {};
+			canceller = function () {};
 			var reason = deferred.cancel(obj);
 			assert.strictEqual(reason, obj);
-			deferred.then(null, function (result) { received = result; });
-			assert.strictEqual(received, reason);
+			deferred.then(null, dfd.callback(function (result) {
+				assert.strictEqual(result, reason);
+			}));
 		});
 
-		test.test('cancel() doesn\'t reject promise if canceler resolves deferred', function () {
+		test.test('cancel() doesn\'t reject promise if canceller resolves deferred', function () {
+			var dfd = this.async(100);
 			var obj = {};
-			var received;
-			canceler = function () { deferred.resolve(obj); };
+			canceller = function () { deferred.resolve(obj); };
 			deferred.cancel();
-			deferred.then(function (result) { received = result; });
-			assert.strictEqual(received, obj);
+			deferred.then(dfd.callback(function (result) {
+				assert.strictEqual(result, obj);
+			}));
 		});
 
-		test.test('cancel() doesn\'t reject promise if canceler resolves a chain of promises', function () {
-			var obj = {};
-			var received;
-			canceler = function () { deferred.resolve(obj); };
-			var last = deferred.then().then().then();
-			last.cancel();
-			last.then(function (result) { received = result; });
-			assert.strictEqual(received, obj);
-			assert.isTrue(deferred.isCanceled());
-			assert.isTrue(last.isCanceled());
-		});
+		/* ES6 Promises don't support cancelling */
+		// test.test('cancel() doesn\'t reject promise if canceller resolves a chain of promises', function () {
+		// 	var dfd = this.async(100);
+		// 	var obj = {};
+		// 	canceller = function () { deferred.resolve(obj); };
+		// 	var last = deferred.then().then().then();
+		// 	last.cancel();
+		// 	last.then(dfd.callback(function (result) {
+		// 		assert.strictEqual(result, obj);
+		// 		assert.isTrue(deferred.isCanceled());
+		// 		// assert.isTrue(last.isCanceled());
+		// 	}));
+		// });
 
-		test.test('cancel() returns undefined if canceler resolves deferred', function () {
-			var obj = {};
-			canceler = function () { deferred.resolve(obj); };
-			var result = deferred.cancel();
-			assert.strictEqual(typeof result, 'undefined');
-		});
+		/* Because promises resolve asyncronously, the return of a canceller that resolves a promise is CancelError */
+		// test.test('cancel() returns undefined if canceller resolves deferred', function () {
+		// 	var obj = {};
+		// 	canceller = function () { deferred.resolve(obj); };
+		// 	var result = deferred.cancel();
+		// 	assert.strictEqual(typeof result, 'undefined');
+		// });
 
-		test.test('cancel() doesn\'t change rejection value if canceler rejects deferred', function () {
+		test.test('cancel() doesn\'t change rejection value if canceller rejects deferred', function () {
+			var dfd = this.async(100);
 			var obj = {};
-			var received;
-			canceler = function () { deferred.reject(obj); };
+			canceller = function () { deferred.reject(obj); };
 			deferred.cancel();
-			deferred.then(null, function (result) { received = result; });
-			assert.strictEqual(received, obj);
+			deferred.then(null, dfd.callback(function (result) {
+				assert.strictEqual(result, obj);
+			}));
 		});
 
-		test.test('cancel() doesn\'t change rejection value if canceler rejects a chain of promises', function () {
-			var obj = {};
-			var received;
-			canceler = function () { deferred.reject(obj); };
-			var last = deferred.then().then().then();
-			last.cancel();
-			last.then(null, function (result) { received = result; });
-			assert.strictEqual(received, obj);
-			assert.isTrue(deferred.isCanceled());
-			assert.isTrue(last.isCanceled());
-		});
+		/* ES6 Promises don't support cancelling */
+		// test.test('cancel() doesn\'t change rejection value if canceller rejects a chain of promises', function () {
+		// 	var obj = {};
+		// 	var received;
+		// 	canceller = function () { deferred.reject(obj); };
+		// 	var last = deferred.then().then().then();
+		// 	last.cancel();
+		// 	last.then(null, function (result) { received = result; });
+		// 	assert.strictEqual(received, obj);
+		// 	assert.isTrue(deferred.isCanceled());
+		// 	assert.isTrue(last.isCanceled());
+		// });
 
-		test.test('cancel() returns undefined if canceler rejects deferred', function () {
-			var obj = {};
-			canceler = function () { deferred.reject(obj); };
-			var result = deferred.cancel();
-			assert.strictEqual(typeof result, 'undefined');
-		});
+		/* Because promises reject asyncronously, the return of a canceller that rejects a promise is CancelError */
+		// test.test('cancel() returns undefined if canceller rejects deferred', function () {
+		// 	var obj = {};
+		// 	canceller = function () { deferred.reject(obj); };
+		// 	var result = deferred.cancel();
+		// 	assert.strictEqual(typeof result, 'undefined');
+		// });
 
-		test.test('cancel() a promise chain', function () {
-			var obj = {};
-			var received;
-			canceler = function (reason) { received = reason; };
-			deferred.then().then().then().cancel(obj);
-			assert.strictEqual(received, obj);
-		});
+		/* ES6 Promises don't support cancelling */
+		// test.test('cancel() a promise chain', function () {
+		// 	var obj = {};
+		// 	var received;
+		// 	canceller = function (reason) { received = reason; };
+		// 	deferred.then().then().then().cancel(obj);
+		// 	assert.strictEqual(received, obj);
+		// });
 
-		test.test('cancel() a returned promise', function () {
-			var obj = {};
-			var received;
-			var inner = new Deferred(function (reason) { received = reason; });
-			var chain = deferred.then(function () {
-				return inner;
-			});
-			deferred.resolve();
-			chain.cancel(obj, true);
-			assert.strictEqual(received, obj);
-		});
+		// test.test('cancel() a returned promise', function () {
+		// 	var obj = {};
+		// 	var received;
+		// 	var inner = new Deferred(function (reason) { received = reason; });
+		// 	var chain = deferred.then(function () {
+		// 		return inner;
+		// 	});
+		// 	deferred.resolve();
+		// 	chain.cancel(obj, true);
+		// 	assert.strictEqual(received, obj);
+		// });
 
 		test.test('cancel() is already bound to the deferred', function () {
-			var received;
-			deferred.then(null, function (result) { received = result; });
+			var dfd = this.async(100);
+			deferred.then(null, dfd.callback(function (result) {
+				assert.instanceOf(result, CancelError);
+			}));
 			var cancel = deferred.cancel;
 			cancel();
-			assert(received instanceof CancelError);
 		});
 
 		test.test('chained then()', function () {
+			var dfd = this.async(100);
 			function square(n) { return n * n; }
 
-			var result;
-			deferred.then(square).then(square).then(function (n) {
-				result = n;
-			});
+			deferred.then(square).then(square).then(dfd.callback(function (n) {
+				assert.strictEqual(n, 16);
+			}));
 			deferred.resolve(2);
-			assert.strictEqual(result, 16);
 		});
 
 		test.test('asynchronously chained then()', function () {
@@ -456,20 +508,22 @@ define([
 		});
 
 		test.test('then() is already bound to the deferred', function () {
+			var dfd = this.async(100);
 			var obj = {};
 			var then = deferred.then;
-			var received;
-			then(function (result) { received = result; });
+			then(dfd.callback(function (result) {
+				assert.strictEqual(result, obj);
+			}));
 			deferred.resolve(obj);
-			assert.strictEqual(received, obj);
 		});
 
-		test.test('then() with progback: returned promise is not fulfilled when progress is emitted', function () {
-			var progressed = false;
-			var promise = deferred.then(null, null, function () { progressed = true; });
-			deferred.progress();
-			assert.isTrue(progressed, 'Progress was received.');
-			assert.isFalse(promise.isFulfilled(), 'Promise is not fulfilled.');
-		});
+		/* ES6 Promises does not support isFulfilled */
+		// test.test('then() with progback: returned promise is not fulfilled when progress is emitted', function () {
+		// 	var progressed = false;
+		// 	var promise = deferred.then(null, null, function () { progressed = true; });
+		// 	deferred.progress();
+		// 	assert.isTrue(progressed, 'Progress was received.');
+		// 	assert.isFalse(promise.isFulfilled(), 'Promise is not fulfilled.');
+		// });
 	});
 });

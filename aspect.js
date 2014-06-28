@@ -83,6 +83,7 @@ define([
 		}
 		return signal;
 	}
+	
 	function aspect(type) {
 		return function (target, methodName, advice, receiveArguments) {
 			var existing = target[methodName],

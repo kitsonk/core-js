@@ -1,15 +1,16 @@
 define([
-], function () {
+	'./has'
+], function (has) {
 	'use strict';
 
-	/* jslint node:true */
+	/* jshint node:true */
 
 	var async;
 
 	var MutationObserver = typeof window !== 'undefined' ? (window.MutationObserver ||
 			window.WebKitMutationObserver) : undefined;
 
-	if (typeof process !== 'undefined' && {}.toString.call(process) === '[object process]') {
+	if (has('host-node')) {
 		async = function (callback, binding) {
 			setImmediate(function () {
 				callback.call(binding);

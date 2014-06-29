@@ -3,7 +3,7 @@ define({
 	proxyUrl: 'http://localhost:9000/',
 
 	capabilities: {
-		'selenium-version': '2.39.0'
+		'selenium-version': '2.41.0'
 	},
 
 	environments: [
@@ -17,12 +17,8 @@ define({
 	],
 
 	maxConcurrency: 3,
-	useSauceConnect: true,
 
-	webdriver: {
-		host: 'localhost',
-		port: 4444
-	},
+	tunnel: 'SauceLabsTunnel',
 
 	useLoader: {
 		'host-node': 'dojo/dojo',

@@ -2,7 +2,7 @@
   "name": "core",
   "version": "0.0.3",
   "devDependencies": {
-    "intern": "^1.7.0"
+    "intern": "^2.0.0"
   },
   "licenses": [
     {

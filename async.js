@@ -1,24 +1,38 @@
 define([
-	'./has'
-], function (has) {
+	'./has',
+	'./global'
+], function (has, global) {
 	'use strict';
 
 	/* jshint node:true */
 
+	has.add('dom-mutationobserver', function (global) {
+		return has('host-browser') && (global.MutationObserver || global.WebKitMutationObserver);
+	});
+
 	var async;
 
-	var MutationObserver = typeof window !== 'undefined' ? (window.MutationObserver ||
-			window.WebKitMutationObserver) : undefined;
-
-	if (has('host-node')) {
+	if (has('host-node') && typeof setImmediate !== 'undefined' && process.version.indexOf('v0.10.') === 0) {
 		async = function (callback, binding) {
-			setImmediate(function () {
+			var timer = setImmediate(function () {
 				callback.call(binding);
 			});
 		};
 	}
-	else if (MutationObserver) {
+	else if (has('host-node')) {
+		async = function (callback, binding) {
+			var removed = false;
+			process.nextTick(function () {
+				if (removed) {
+					return;
+				}
+				callback.call(binding);
+			});
+		};
+	}
+	else if (has('dom-mutationobserver')) {
 		var queue = [],
+			MutationObserver = global.MutationObserver || global.WebKitMutationObserver,
 
 			observer = new MutationObserver(function () {
 				var toProcess = queue.slice();

@@ -14,7 +14,7 @@ define([
 
 	if (has('host-node') && typeof setImmediate !== 'undefined' && process.version.indexOf('v0.10.') === 0) {
 		async = function (callback, binding) {
-			var timer = setImmediate(function () {
+			setImmediate(function () {
 				callback.call(binding);
 			});
 		};

@@ -7,18 +7,18 @@ define({
 	},
 
 	environments: [
-		{ browserName: 'internet explorer', version: '11', platform: 'Windows 8.1' },
-		{ browserName: 'internet explorer', version: '10', platform: 'Windows 8' },
-		{ browserName: 'internet explorer', version: '9', platform: 'Windows 7' },
-		{ browserName: 'firefox', version: '30', platform: [ 'OS X 10.6', 'Windows 7', 'Linux' ] },
-		{ browserName: 'chrome', version: '35', platform: [ 'OS X 10.6', 'Windows 7', 'Linux' ] },
-		{ browserName: 'safari', version: '6', platform: 'OS X 10.8' },
-		{ browserName: 'safari', version: '7', platform: 'OS X 10.9' }
+		{ browserName: 'internet explorer', version: '11.0', platform: 'win8' },
+		{ browserName: 'internet explorer', version: '10.0', platform: 'win8' },
+		{ browserName: 'internet explorer', version: '9.0', platform: 'windows' },
+		{ browserName: 'firefox', version: '29.0', platform: 'windows' },
+		{ browserName: 'chrome', version: '35.0', platform: 'win8' },
+		{ browserName: 'safari', version: '6.1', platform: 'mac' },
+		{ browserName: 'safari', version: '7.0', platform: 'mac' }
 	],
 
-	maxConcurrency: 3,
+	maxConcurrency: 2,
 
-	tunnel: 'SauceLabsTunnel',
+	tunnel: 'BrowserStackTunnel',
 
 	useLoader: {
 		'host-node': 'dojo/dojo',

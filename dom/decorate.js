@@ -6,6 +6,8 @@ define([
 ], function (on, add, modify, remove) {
 	'use strict';
 
+	var slice = Array.prototype.slice;
+
 	var nodeListDescriptors = {
 		on: {
 			value: function (type, listener) {
@@ -24,7 +26,7 @@ define([
 		add: {
 			value: function (/* selectors... */) {
 				var self = this,
-					args = Array.prototype.slice.call(arguments);
+					args = slice.call(arguments);
 				return decorate.call(self, self.map(function (node) {
 					return add.apply(self, [ node ].concat(args));
 				}));
@@ -34,7 +36,7 @@ define([
 		modify: {
 			value: function (/* selectors... */) {
 				var self = this,
-					args = Array.prototype.slice.call(arguments);
+					args = slice.call(arguments);
 				return self.map(function (node) {
 					return modify.apply(self, [ node ].concat(args));
 				});

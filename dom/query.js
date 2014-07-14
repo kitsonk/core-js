@@ -1,9 +1,12 @@
 define([
 	'../doc',
+	'../on',
+	'./add',
 	'./get',
-	'./decorate',
+	'./modify',
+	'./remove',
 	'./useRoot'
-], function (doc, get, decorate, useRoot) {
+], function (doc, on, add, get, modify, remove, useRoot) {
 	'use strict';
 
 		// This matches query selectors that are faster to handle via other methods than qSA
@@ -11,7 +14,93 @@ define([
 
 	var slice = Array.prototype.slice;
 
-	return function query(/*selectors...*/) {
+	var nodeListDescriptors = {
+		on: {
+			value: function (type, listener) {
+				var handles = this.map(function (node) {
+					return on(node, type, listener);
+				});
+				handles.remove = function remove() {
+					handles.forEach(function (handle) {
+						handle.remove();
+					});
+				};
+				return handles;
+			},
+			configurable: true
+		},
+		add: {
+			value: function (/* selectors... */) {
+				var self = this,
+					args = slice.call(arguments);
+				return decorate.call(self, self.map(function (node) {
+					return add.apply(self, [ node ].concat(args));
+				}));
+			},
+			configurable: true
+		},
+		modify: {
+			value: function (/* selectors... */) {
+				var self = this,
+					args = slice.call(arguments);
+				return self.map(function (node) {
+					return modify.apply(self, [ node ].concat(args));
+				});
+			},
+			configurable: true
+		},
+		query: {
+			value: function (/* selectors... */) {
+				var self = this,
+					args = slice.call(arguments),
+					results = [];
+				self.forEach(function (node) {
+					results = results.concat(query.apply(self, [ node ].concat(args)));
+				});
+				return decorate(results);
+			},
+			configurable: true
+		},
+		remove: {
+			value: function () {
+				this.forEach(function (node) {
+					remove(node);
+				});
+			},
+			configurable: true
+		}
+	};
+
+	/**
+	 * Add syntactic sugar to arrays of DOMNodes that are returned from other types of operatives to be used in
+	 * chaining.
+	 * @param  {Array(DOMNodes)} nodes The array of DOMNodes that should be decorated.
+	 * @return {Array}                 The array with `.on()`, `.add()`, `.modify()`, `.query()`, and `.remove()` added
+	 *                                 to it.
+	 */
+	function decorate(nodes) {
+		if (!nodes) {
+			return nodes;
+		}
+		Object.defineProperties(nodes, nodeListDescriptors);
+		if (this && this.doc) {
+			Object.defineProperty(nodes, 'doc', {
+				value: this.doc,
+				configurable: true
+			});
+		}
+		return nodes;
+	}
+
+	/**
+	 * Query the DOM with CSS selectors to identify a list of DOM Nodes that match the provided selectors.  If one of
+	 * the arguments passed is a DOM Node, then it becomes the root of subsequent selectors.  If a DOM Node is
+	 * omitted, the current document becomes the root.
+	 * @param {String|Object...} selectors Any combination of strings or objects that are used to query the DOM
+	 * @return {Array(DOMNodes)}           An array of DOM Nodes that are decorated with some additional methods for
+	 *                                     further manipulation.
+	 */
+	function query(/*selectors...*/) {
 		var args = arguments,
 			argument,
 			results = [],
@@ -99,6 +188,9 @@ define([
 		}
 
 		return decorate.call(this, results);
-	};
+	}
 
+	query.decorate = decorate;
+
+	return query;
 });

@@ -3,8 +3,9 @@ define([
 	'intern/chai!assert',
 	'../../dom/query',
 	'../../dom/get',
-	'../../doc'
-], function (test, assert, query, get, doc) {
+	'../../doc',
+	'../../on'
+], function (test, assert, query, get, doc, on) {
 
 	function emptyDom(root) {
 		root = root || doc.body;
@@ -303,8 +304,75 @@ define([
 			assert.equal(0, query('h3 span:empty').length);
 			assert.equal(1, query('h3 :not(:empty)').length);
 		});
-		test.test('decoration function', function () {
-			// console.log(query('.foo~span'));
+		test.suite('.decorate()', function () {
+			var div, p, button, nodes, spanNodes;
+			test.test('basic', function () {
+				div = doc.body.appendChild(doc.createElement('div'));
+				p = doc.body.appendChild(doc.createElement('p'));
+				button = doc.body.appendChild(doc.createElement('button'));
+				nodes = query.decorate([ div, p, button ]);
+				assert(nodes.on);
+				assert(nodes.add);
+				assert(nodes.remove);
+				assert(nodes.modify);
+				assert(nodes.concat);
+				assert(nodes.every);
+				assert(nodes.filter);
+				assert(nodes.forEach);
+				assert(nodes.indexOf);
+				assert(nodes.join);
+				assert(nodes.lastIndexOf);
+				assert(nodes.map);
+				assert(nodes.pop);
+				assert(nodes.push);
+				assert(nodes.reduce);
+				assert(nodes.reduceRight);
+				assert(nodes.reverse);
+				assert(nodes.shift);
+				assert(nodes.slice);
+				assert(nodes.some);
+				assert(nodes.sort);
+				assert(nodes.splice);
+				assert(nodes.unshift);
+				assert.equal(nodes.length, 3);
+			});
+			test.test('[].add()', function () {
+				spanNodes = nodes.add('span');
+				assert.equal('span', div.firstChild.tagName.toLowerCase());
+				assert.equal('span', p.firstChild.tagName.toLowerCase());
+				assert.equal(spanNodes.length, 3);
+				assert.strictEqual(spanNodes[0], div.firstChild);
+				var bNodes = spanNodes.add('b[content=foo]');
+				assert.equal(bNodes.length, 3);
+			});
+			test.test('[].query()', function () {
+				var queryNodes = nodes.query('span');
+				assert.equal(queryNodes.length, 3);
+				assert.deepEqual(queryNodes, spanNodes);
+			});
+			test.test('[].on()', function () {
+				var wasClicked = false,
+					signal = nodes.on('click', function () {
+						wasClicked = true;
+					});
+
+				assert.isFalse(wasClicked);
+				on.emit(button, 'click', { bubbles: true, cancelable: true });
+				assert.isTrue(wasClicked);
+				wasClicked = false;
+				signal.remove();
+				on.emit(button, 'click', { bubbles: true, cancelable: true });
+				assert.isFalse(wasClicked);
+			});
+			test.test('[].remove()', function () {
+				assert(div.firstChild);
+				assert(p.firstChild);
+				assert(button.firstChild);
+				spanNodes.remove();
+				assert.isNull(div.firstChild);
+				assert.isNull(p.firstChild);
+				assert.isNull(button.firstChild);
+			});
 		});
 	});
 });

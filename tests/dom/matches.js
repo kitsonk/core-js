@@ -1,12 +1,13 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../../dom/matches'
-], function (test, assert, matches) {
+	'../../dom/matches',
+	'../../doc'
+], function (test, assert, matches, doc) {
 	test.suite('core/dom/matches', function () {
-		var div = document.body.appendChild(document.createElement('div')),
-			p = div.appendChild(document.createElement('p')),
-			span = p.appendChild(document.createElement('span'));
+		var div = doc.body.appendChild(doc.createElement('div')),
+			p = div.appendChild(doc.createElement('p')),
+			span = p.appendChild(doc.createElement('span'));
 
 		test.test('matching no context', function () {
 			assert.isTrue(matches(div, 'div'));

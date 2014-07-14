@@ -16,7 +16,7 @@ define([
 		var around = type === 'around';
 		var signal;
 		if (around) {
-			var advised = advice(function () {
+			var advised = advice(function advice() {
 				return previous.advice(this, arguments);
 			});
 			signal = {

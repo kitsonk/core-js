@@ -1,7 +1,8 @@
 define([
 	'../has',
+	'../doc',
 	'./useRoot'
-], function (has, useRoot) {
+], function (has, doc, useRoot) {
 	'use strict';
 
 	has.add('dom-element-matches', function (global, doc, element) {
@@ -10,8 +11,8 @@ define([
 
 		// Also, currently the has API doesn't recognise the pseudo DOM and therefore the passed arguments to the
 		// function to detect the capabilities
-		var matchesFunctionName = 'matches' in element ? 'matches' : false;
-		if (!matchesFunctionName) {
+		var matchesFunctionName = element && 'matches' in element ? 'matches' : false;
+		if (element && !matchesFunctionName) {
 			['moz', 'webkit', 'ms', 'o'].some(function (vendorPrefix) {
 				return vendorPrefix + 'MatchesSelector' in element ?
 					matchesFunctionName = vendorPrefix + 'MatchesSelector' : false;
@@ -20,7 +21,7 @@ define([
 		return matchesFunctionName;
 	});
 
-	var matchesSelector = has('dom-element-matches') ? document.createElement('div')[has('dom-element-matches')] :
+	var matchesSelector = has('dom-element-matches') ? doc.createElement('div')[has('dom-element-matches')] :
 			undefined;
 
 	/**

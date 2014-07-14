@@ -46,7 +46,7 @@ define([
 			'		<div id="start">a start node</div>';
 	}
 
-	test.suite('dom/get()', function () {
+	test.suite('core/dom/get', function () {
 		test.test('basic', function () {
 			emptyDom();
 			setGetTestDom();

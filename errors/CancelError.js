@@ -5,7 +5,7 @@ define(['./create'], function (create) {
 	/*=====
 	return function(){
 		// summary:
-		//		Default error if a promise is canceled without a reason.
+		//		Default error if a promise is cancelled without a reason.
 	};
 	=====*/
 

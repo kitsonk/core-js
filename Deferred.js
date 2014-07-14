@@ -20,7 +20,7 @@ define([
 			result;
 
 		if (subscribers.length) {
-			async(function () {
+			async(function asyncPublish() {
 				for (var i = 0; i < subscribers.length; i++) {
 					if (typeof result !== 'undefined') {
 						update = result;
@@ -64,8 +64,8 @@ define([
 		/* Provide a mechanism to wrap the promise.then so it can support accepting a progress handler, but all
 			progress listeners will actuablly be attached to the deferred, since ES6 Promises don't support the
 			concept */
-		var aroundPromise = function (promiseThen) {
-			return function (callback, errback, progback) {
+		var aroundPromise = function aroundPromise(promiseThen) {
+			return function aroundAdvice(callback, errback, progback) {
 				if (progback) {
 					progressSubscribers.get(deferred).push(progback);
 				}

@@ -1,7 +1,11 @@
-define(['./lang'], function (lang) {
+define([
+	'./lang'
+], function (lang) {
 
-	// module:
-	//		dojo/io-query
+	/**
+	 * Utilities for modifying URI query strings
+	 * @exports core/io-query
+	 */
 
 	var backstop = {};
 

@@ -47,19 +47,6 @@ define([
 		return (startWith || []).concat(slice.call(obj, offset || 0));
 	}
 
-	function _hitchArgs(scope, method) {
-		var pre = _toArray(arguments, 2);
-		var named = typeof method === 'string';
-		return function () {
-			// arrayify arguments
-			var args = _toArray(arguments);
-			// locate our method
-			var f = named ? window.global[method] : method;
-			// invoke with collected args
-			return f && f.apply(scope || this, pre.concat(args)); // mixed
-		}; // Function
-	}
-
 	function getProp(/*Array*/parts, /*Boolean*/create, /*Object*/context) {
 		var p, i;
 
@@ -221,59 +208,6 @@ define([
 				};
 			}
 			return method.bind.apply(method, [ context ].concat(extra));
-		},
-
-		hitch: function (scope, method) {
-			// summary:
-			//		Returns a function that will only ever execute in the a given scope.
-			//		This allows for easy use of object member functions
-			//		in callbacks and other places in which the "this" keyword may
-			//		otherwise not reference the expected scope.
-			//		Any number of default positional arguments may be passed as parameters
-			//		beyond "method".
-			//		Each of these values will be used to "placehold" (similar to curry)
-			//		for the hitched function.
-			// scope: Object
-			//		The scope to use when method executes. If method is a string,
-			//		scope is also the object containing method.
-			// method: Function|String...
-			//		A function to be hitched to scope, or the name of the method in
-			//		scope to be hitched.
-			// example:
-			//	|	lang.hitch(foo, "bar")();
-			//		runs foo.bar() in the scope of foo
-			// example:
-			//	|	lang.hitch(foo, myFunction);
-			//		returns a function that runs myFunction in the scope of foo
-			// example:
-			//		Expansion on the default positional arguments passed along from
-			//		hitch. Passed args are mixed first, additional args after.
-			//	|	var foo = { bar: function(a, b, c){ console.log(a, b, c); } };
-			//	|	var fn = lang.hitch(foo, "bar", 1, 2);
-			//	|	fn(3); // logs "1, 2, 3"
-			// example:
-			//	|	var foo = { bar: 2 };
-			//	|	lang.hitch(foo, function(){ this.bar = 10; })();
-			//		execute an anonymous function in scope of foo
-			if (arguments.length > 2) {
-				return _hitchArgs.apply(global, arguments); // Function
-			}
-			if (!method) {
-				method = scope;
-				scope = null;
-			}
-			if (typeof method === 'string') {
-				scope = scope || global;
-				if (!scope[method]) {
-					throw ([ 'lang.hitch: scope["', method, '"] is null (scope="', scope, '")' ].join(''));
-				}
-				return function () {
-					return scope[method].apply(scope, arguments || []);
-				}; // Function
-			}
-			return !scope ? method : function () {
-				return method.apply(scope, arguments || []);
-			}; // Function
 		},
 
 		extend: function (ctor/*, props*/) {

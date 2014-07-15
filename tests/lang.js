@@ -116,65 +116,6 @@ define([
 				assert.equal(fn(), 'baz');
 			});
 		});
-		test.suite('lang.hitch()', function () {
-			test.test('basic', function () {
-				var scope = { foo: 'bar' },
-					scope2 = { foo: 'baz' };
-				function thinger() {
-					return [this.foo, arguments.length];
-				}
-
-				var st1 = lang.hitch(scope, thinger);
-				assert.deepEqual(st1(), [ 'bar', 0 ]);
-
-				var st2 = lang.hitch(scope2, thinger);
-				assert.deepEqual(st2(), [ 'baz', 0 ]);
-				assert.equal(st2('blah')[1], 1);
-
-				/* st2 should be "scope proof" */
-				assert.equal(st2.call(scope)[0], 'baz');
-			});
-			test.test('with arguments', function () {
-				var scope = { foo: 'bar' },
-					scope2 = { foo: 'baz' };
-				function thinger() {
-					return [this.foo, arguments.length];
-				}
-
-				var st1 = lang.hitch(scope, thinger, 'foo', 'bar');
-				assert.deepEqual(st1(), [ 'bar', 2 ]);
-
-				var st2 = lang.hitch(scope2, thinger, 'foo', 'bar');
-				assert.deepEqual(st2(), [ 'baz', 2 ]);
-			});
-			test.test('as partial', function () {
-				var scope = { foo: 'bar' };
-				function thinger(arg1, arg2) {
-					return [ (this && 'foo' in this) ? this.foo : undefined, arg1, arg2 ];
-				}
-
-				var st1 = lang.hitch(null, thinger);
-				assert.equal(st1.call(scope)[0], 'bar');
-				assert.isUndefined(st1()[0]);
-
-				var st2 = lang.hitch(null, thinger, 'foo', 'bar');
-				assert.equal(st2()[2], 'bar');
-			});
-			test.test('string', function () {
-				var scope = {
-					foo: 'bar',
-					method: function () {
-						return this.foo;
-					}
-				};
-
-				var st1 = lang.hitch(scope, 'method');
-				assert.equal(st1(), 'bar');
-				assert.throws(function () {
-					lang.hitch(scope, 'method2');
-				});
-			});
-		});
 		test.test('lang.extend()', function () {
 			var src = {
 				foo: function () {

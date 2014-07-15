@@ -170,18 +170,8 @@ define([
 			else if (object.nodeType && 'cloneNode' in object) {
 				returnValue = object.cloneNode(true);
 			}
-			else if (object instanceof Date || object instanceof RegExp) {
-				returnValue = new object.constructor(object);
-			}
 			else {
-				if (Array.isArray(object)) {
-					returnValue = [];
-				}
-				else {
-					returnValue = object.constructor ? new object.constructor() : {};
-				}
-
-				_mixin(returnValue, object, lang.clone);
+				return Object.create(object);
 			}
 
 			return returnValue;
@@ -300,6 +290,23 @@ define([
 			//	| lang.exists("bar", foo); // true
 			//	| lang.exists("bar.baz", foo); // false
 			return lang.getObject(name, false, obj) !== undefined; // Boolean
+		},
+
+		/**
+		 * Remove all instances of a value from an array and return them.
+		 * @param  {Array} haystack The array to search for the value to be removed.
+		 * @param  {Any}   needle   The value to search for in the `haystack`.
+		 * @return {Array}          Any instances of the `needle` that have been removed.
+		 */
+		spliceFromArray: function (haystack, needle) {
+			var removed = [],
+				i = 0;
+
+			while ((i = haystack.indexOf(needle, i)) > -1) {
+				removed.push(haystack.splice(i, 1)[0]);
+			}
+
+			return removed;
 		}
 	};
 

@@ -1,81 +1,50 @@
 define([
-	'./request/default!'/*=====,
-	'./_base/declare',
-	'./promise/Promise' =====*/
-], function (request/*=====, declare, Promise =====*/) {
-	/*=====
-	request = function(url, options){
-		// summary:
-		//		Send a request using the default transport for the current platform.
-		// url: String
-		//		The URL to request.
-		// options: dojo/request.__Options?
-		//		Options for the request.
-		// returns: dojo/request.__Promise
-	};
-	request.__Promise = declare(Promise, {
-		// response: dojo/promise/Promise
-		//		A promise resolving to an object representing
-		//		the response from the server.
-	});
-	request.__BaseOptions = declare(null, {
-		// query: String|Object?
-		//		Query parameters to append to the URL.
-		// data: String|Object?
-		//		Data to transfer.  This is ignored for GET and DELETE
-		//		requests.
-		// preventCache: Boolean?
-		//		Whether to append a cache-busting parameter to the URL.
-		// timeout: Integer?
-		//		Milliseconds to wait for the response.  If this time
-		//		passes, the then the promise is rejected.
-		// handleAs: String?
-		//		How to handle the response from the server.  Default is
-		//		'text'.  Other values are 'json', 'javascript', and 'xml'.
-	});
-	request.__MethodOptions = declare(null, {
-		// method: String?
-		//		The HTTP method to use to make the request.  Must be
-		//		uppercase.
-	});
-	request.__Options = declare([request.__BaseOptions, request.__MethodOptions]);
+	'./Registry',
+	'./Promise',
+	'./has!host-browser?./request/xhr:host-node?./request/node'
+], function (Registry, Promise, defaultProvider) {
+	'use strict';
 
-	request.get = function(url, options){
-		// summary:
-		//		Send an HTTP GET request using the default transport for the current platform.
-		// url: String
-		//		URL to request
-		// options: dojo/request.__BaseOptions?
-		//		Options for the request.
-		// returns: dojo/request.__Promise
+	var request = function request(/*url, options*/) {
+		var args = Array.prototype.slice.call(arguments),
+			promise = request.providerRegistry.match(args).apply(null, args).then(function (response) {
+				args.unshift(response);
+				return new Promise(function (resolve) {
+					resolve(request.filterRegistry.match.apply(request.filterRegistry, args).apply(null, args));
+				}).then(function (filterResponse) {
+					response.data = filterResponse.data;
+					return response;
+				});
+			});
+
+		promise.data = promise.then(function (response) {
+			return response.data;
+		});
+
+		return promise;
 	};
-	request.post = function(url, options){
-		// summary:
-		//		Send an HTTP POST request using the default transport for the current platform.
-		// url: String
-		//		URL to request
-		// options: dojo/request.__BaseOptions?
-		//		Options for the request.
-		// returns: dojo/request.__Promise
-	};
-	request.put = function(url, options){
-		// summary:
-		//		Send an HTTP POST request using the default transport for the current platform.
-		// url: String
-		//		URL to request
-		// options: dojo/request.__BaseOptions?
-		//		Options for the request.
-		// returns: dojo/request.__Promise
-	};
-	request.del = function(url, options){
-		// summary:
-		//		Send an HTTP DELETE request using the default transport for the current platform.
-		// url: String
-		//		URL to request
-		// options: dojo/request.__BaseOptions?
-		//		Options for the request.
-		// returns: dojo/request.__Promise
-	};
-	=====*/
+
+	request.providerRegistry = new Registry(defaultProvider);
+	var filterRegistry = request.filterRegistry = new Registry(function (response) {
+		return response;
+	});
+
+	filterRegistry.register(function (response, url, options) {
+		/* jshint node:true */
+		return (typeof response.data === 'string' || response.data instanceof Buffer)
+			&& options.responseType === 'json';
+	}, function (response) {
+		response.data = JSON.parse(response.data);
+		return response;
+	});
+
+	['delete', 'get', 'post', 'put'].forEach(function (method) {
+		request[method] = function (url, options) {
+			options = Object.create(options);
+			options.method = method.toUpperCase();
+			return request(url, options);
+		};
+	});
+
 	return request;
 });

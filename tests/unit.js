@@ -7,9 +7,10 @@ define([
 	'./has',
 	'./lang',
 	'./on',
-	// './request'
+	'./request',
 	'./Deferred',
 	'./Evented',
 	'./Promise',
+	'./Registry',
 	'./SideTable'
 ], 1);

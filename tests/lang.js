@@ -159,5 +159,20 @@ define([
 			assert.isTrue(lang.exists('_existsTest'));
 			assert.isFalse(lang.exists('_existsTest.bar'));
 		});
+		test.test('lang.spliceFromArray()', function () {
+			var haystack = [ 'foo', 'bar', 'baz', 'foo', 'bar', 'baz' ];
+
+			assert.equal(haystack.length, 6);
+			var removed = lang.spliceFromArray(haystack, 'foo');
+			assert.deepEqual(removed, [ 'foo', 'foo' ]);
+			assert.deepEqual(haystack, [ 'bar', 'baz', 'bar', 'baz' ]);
+			var foo = {},
+				bar = {},
+				baz = {};
+			haystack = [ foo, bar, baz, foo, bar, baz ];
+			removed = lang.spliceFromArray(haystack, foo);
+			assert.deepEqual(removed, [ foo, foo ]);
+			assert.deepEqual(haystack, [ bar, baz, bar, baz ]);
+		});
 	});
 });

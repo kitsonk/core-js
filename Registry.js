@@ -8,12 +8,23 @@ define([
 		defaultValueSideTable = new SideTable(),
 		noop = function () {};
 
+	/**
+	 * A class that provides a mechanism to register values based upon a test and be able to retrieve them later.
+	 * @param {Any} defaultValue This will be the default value if no match if found.  If none is supplied and an
+	 *                           attempt is made to find a match but none is found, `.match()` will then throw an error.
+	 */
 	function Registry(defaultValue) {
 		entriesSideTable.set(this, []);
 		defaultValueSideTable.set(this, defaultValue);
 	}
 
 	Registry.prototype = {
+		/**
+		 * The method for retrieving a registered value or default value.
+		 * @param  {Any...} args... Any number of arguments which are then passed to any of the registered tests.
+		 * @return {Any}            The value of the match.  If no match is found and there is no default value, this
+		 *                          method will throw.
+		 */
 		match: function (/* args... */) {
 			var args = Array.prototype.slice.call(arguments),
 				entries = entriesSideTable.get(this).slice(0),
@@ -31,6 +42,18 @@ define([
 
 			throw new Error('No match found');
 		},
+
+		/**
+		 * Register a test function, that if matched then returns the registered value.
+		 * @param  {Function} test   The function to test if there is a match.  The function needs to return a truthy
+		 *                           value to be true, otherwise it needs to return a falsey.
+		 * @param  {Any}      value  The value to be returned if there is a match.
+		 * @param  {Boolean}  first? Determines if the test is placed at the top of the stack.  Test are run first to
+		 *                           last and as soon as there is a match, testing stops.  If `true` then the value is
+		 *                           placed first, if `false`, the value is placed last. Defaults to `false`.
+		 * @return {Object}          Returns a handle with a `.remove()` function that can be used to remove the entry
+		 *                           from the stack.
+		 */
 		register: function (test, value, first) {
 			var entries = entriesSideTable.get(this),
 				entry = {

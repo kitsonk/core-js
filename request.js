@@ -5,12 +5,20 @@ define([
 ], function (Registry, Promise, defaultProvider) {
 	'use strict';
 
+	/**
+	 * An API for making asynchronous requests to retrieve data.
+	 * @param  {String}  url     The resource location for the data to be retrieved.
+	 * @param  {Object?} options An object which supplies settings for the request.
+	 * @return {Promise}         A promise that will be fulfilled when the request is complete or errors out. If
+	 *                           completed, it will resolve with a response object where the data retrieved will be
+	 *                           contained in `.data`.
+	 */
 	var request = function request(/*url, options*/) {
 		var args = Array.prototype.slice.call(arguments),
-			promise = request.providerRegistry.match(args).apply(null, args).then(function (response) {
+			promise = providerRegistry.match.apply(providerRegistry, args).apply(null, args).then(function (response) {
 				args.unshift(response);
 				return new Promise(function (resolve) {
-					resolve(request.filterRegistry.match.apply(request.filterRegistry, args).apply(null, args));
+					resolve(filterRegistry.match.apply(filterRegistry, args).apply(null, args));
 				}).then(function (filterResponse) {
 					response.data = filterResponse.data;
 					return response;
@@ -24,7 +32,7 @@ define([
 		return promise;
 	};
 
-	request.providerRegistry = new Registry(defaultProvider);
+	var providerRegistry = request.providerRegistry = new Registry(defaultProvider);
 	var filterRegistry = request.filterRegistry = new Registry(function (response) {
 		return response;
 	});
@@ -32,15 +40,16 @@ define([
 	filterRegistry.register(function (response, url, options) {
 		/* jshint node:true */
 		return (typeof response.data === 'string' || response.data instanceof Buffer)
-			&& options.responseType === 'json';
+			&& (options && options.responseType === 'json');
 	}, function (response) {
 		response.data = JSON.parse(response.data);
 		return response;
 	});
 
+	/* Decorate request with common methods */
 	['delete', 'get', 'post', 'put'].forEach(function (method) {
 		request[method] = function (url, options) {
-			options = Object.create(options);
+			options = options ? Object.create(options) : {};
 			options.method = method.toUpperCase();
 			return request(url, options);
 		};

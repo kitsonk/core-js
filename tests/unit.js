@@ -2,7 +2,7 @@ define([
 	'./aspect',
 	'./async',
 	'./compose',
-	'./dom',
+	'../has!host-browser?./dom',
 	'./global',
 	'./has',
 	'./lang',

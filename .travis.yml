@@ -11,6 +11,6 @@ env:
     - TEST_SUITE: node
     - TEST_SUITE: remote
 before_script:
-  - "npm install -g grunt-cli"
-  - "grunt ts"
+  - travis_retry npm install -g grunt-cli
+  - travis_retry npm install
 script: "grunt test:$TEST_SUITE"

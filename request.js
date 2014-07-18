@@ -1,8 +1,9 @@
 define([
+	'./has',
 	'./Registry',
 	'./Promise',
 	'./has!host-browser?./request/xhr:host-node?./request/node'
-], function (Registry, Promise, defaultProvider) {
+], function (has, Registry, Promise, defaultProvider) {
 	'use strict';
 
 	/**
@@ -39,8 +40,13 @@ define([
 
 	filterRegistry.register(function (response, url, options) {
 		/* jshint node:true */
-		return (typeof response.data === 'string' || response.data instanceof Buffer)
-			&& (options && options.responseType === 'json');
+		if (has('host-node')) {
+			return (typeof response.data === 'string' || response.data instanceof Buffer)
+				&& options && options.responseType === 'json';
+		}
+		else {
+			return response.data === 'string' && options && options.responseType === 'json';
+		}
 	}, function (response) {
 		response.data = JSON.parse(response.data);
 		return response;

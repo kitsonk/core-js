@@ -8,9 +8,9 @@ env:
     - SAUCE_USERNAME: core-ts-ci
     - SAUCE_ACCESS_KEY: 735b17e8-adcd-436a-bc5e-f5bec5e91a64
   matrix:
-    - TEST-SUITE: node
-    - TEST-SUITE: remote
-before script:
+    - TEST_SUITE: node
+    - TEST_SUITE: remote
+before_script:
   - "npm install -g grunt-cli"
   - "grunt ts"
 script: "grunt test:$TEST_SUITE"

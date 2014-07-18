@@ -45,7 +45,7 @@ define([
 				&& options && options.responseType === 'json';
 		}
 		else {
-			return response.data === 'string' && options && options.responseType === 'json';
+			return typeof response.data === 'string' && options && options.responseType === 'json';
 		}
 	}, function (response) {
 		response.data = JSON.parse(response.data);

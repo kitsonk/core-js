@@ -6,7 +6,7 @@ module.exports = function (grunt) {
 		intern: {
 			remote: {
 				options: {
-					runtType: 'runner',
+					runType: 'runner',
 					config: 'tests/config',
 					reporters: [ 'runner' ]
 				}
@@ -23,7 +23,7 @@ module.exports = function (grunt) {
 
 	grunt.registerTask('test', function (target) {
 		if (!target) {
-			target = 'node';
+			target = 'remote';
 		}
 
 		function addReporter(reporter) {

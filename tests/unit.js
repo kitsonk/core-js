@@ -8,7 +8,7 @@ define([
 	'./lang',
 	'./on',
 	'./request',
-	'./Deferred',
+	// './Deferred', // remove temporarily
 	'./Evented',
 	'./Promise',
 	'./Registry',

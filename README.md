@@ -1,5 +1,7 @@
 # core #
 
+[![Build Status](https://travis-ci.org/kitsonk/core.svg?branch=master)](https://travis-ci.org/kitsonk/core)
+
 This is an experimental prototype package of what might constitute the core of Dojo 2.  It is here in order to support
 other packages that I am working on.
 

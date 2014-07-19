@@ -6,8 +6,7 @@ define([
 	// module:
 	//		dojo/aspect
 
-	var undefined,
-		getDescriptor = properties.getDescriptor,
+	var getDescriptor = properties.getDescriptor,
 		defineProperty = Object.defineProperty,
 		nextId = 0;
 

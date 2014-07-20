@@ -1,7 +1,9 @@
 define([
 	'./has',
-	'./global'
-], function (has, global) {
+	'./global',
+	'./lang',
+	'./CallbackQueue'
+], function (has, global, lang, CallbackQueue) {
 	'use strict';
 
 	/* jshint node:true */
@@ -30,33 +32,39 @@ define([
 			});
 		};
 	}
-	else if (has('dom-mutationobserver')) {
-		var queue = [],
-			MutationObserver = global.MutationObserver || global.WebKitMutationObserver,
-
-			observer = new MutationObserver(function () {
-				var toProcess = queue.slice();
-				queue = [];
-				toProcess.forEach(function (tuple) {
-					tuple[0].call(tuple[1]);
-				});
-			}),
-
-			element = document.createElement('div');
-
-		observer.observe(element, { attributes: true });
-
-		async = function (callback, binding) {
-			queue.push([ callback, binding ]);
-			element.setAttribute('dq', 'dq');
-		};
-	}
 	else {
-		async = function (callback, binding) {
-			setTimeout(function () {
-				callback.call(binding);
-			}, 1);
-		};
+		var queue = new CallbackQueue();
+
+		if (has('dom-mutationobserver')) {
+			var MutationObserver = global.MutationObserver || global.WebKitMutationObserver,
+
+				observer = new MutationObserver(function () {
+					queue.drain();
+				}),
+
+				element = document.createElement('div');
+
+			observer.observe(element, { attributes: true });
+
+			async = function (callback, binding) {
+				queue.add(lang.bind(binding, callback));
+				element.setAttribute('dq', 'dq');
+			};
+		}
+		else {
+			var timer;
+			async = function (callback, binding) {
+				queue.add(lang.bind(binding, callback));
+
+				if (!timer) {
+					timer = setTimeout(function () {
+						clearTimeout(timer);
+						timer = null;
+						queue.drain();
+					}, 1);
+				}
+			};
+		}
 	}
 
 	return async;

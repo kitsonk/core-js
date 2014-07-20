@@ -1,6 +1,6 @@
 define([
-	'./lang'
-], function (lang) {
+], function () {
+	'use strict';
 
 	/**
 	 * Utilities for modifying URI query strings
@@ -38,7 +38,7 @@ define([
 				var value = map[name];
 				if (value !== backstop[name]) {
 					var assign = enc(name) + '=';
-					if (lang.isArray(value)) {
+					if (value instanceof Array) {
 						for (var i = 0, l = value.length; i < l; ++i) {
 							pairs.push(assign + enc(value[i]));
 						}
@@ -90,7 +90,7 @@ define([
 						ret[name] = [ret[name]];
 					}
 
-					if (lang.isArray(ret[name])) {
+					if (ret[name] instanceof Array) {
 						ret[name].push(val);
 					}
 					else {

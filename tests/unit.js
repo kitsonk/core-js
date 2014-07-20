@@ -5,9 +5,11 @@ define([
 	'../has!host-browser?./dom',
 	'./global',
 	'./has',
+	'./io-query',
 	'./lang',
 	'./on',
 	'./request',
+	'./CallbackQueue',
 	// './Deferred', // remove temporarily
 	'./Evented',
 	'./Promise',

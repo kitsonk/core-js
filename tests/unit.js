@@ -7,6 +7,7 @@ define([
 	'./has',
 	'./io-query',
 	'./lang',
+	'./properties',
 	'./on',
 	'./request',
 	'./CallbackQueue',

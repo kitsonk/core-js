@@ -7,6 +7,38 @@ define([
 		getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor,
 		defineProperty = Object.defineProperty;
 
+	var getValueDescriptor = function (value) {
+		return {
+			value: value,
+			enumerable: true,
+			writable: true,
+			configurable: true
+		};
+	};
+
+	var getReadOnlyDescriptor = function (value) {
+		return {
+			value: value,
+			enumerable: true,
+			configurable: true
+		};
+	};
+
+	var getPseudoPrivateDescriptor = function (value) {
+		return {
+			value: value,
+			configurable: true
+		};
+	};
+
+	var getHiddenDescriptor = function (value) {
+		return {
+			value: value,
+			writable: true,
+			configurable: true
+		};
+	};
+
 	return {
 		/**
 		 * Returns a property descriptor from an object for the supplied property name.
@@ -61,17 +93,14 @@ define([
 		},
 
 		/**
-		 * Creates a non-enumerable property with an appended `_` in front of the name.
+		 * Creates a normal "value" property with the supplied value
 		 * @param  {Object} obj   The object that the property should be created on
-		 * @param  {String} name  The name of the property to be shadowed
-		 * @param  {Mixed}  value The value of the property
-		 * @return {Mixed}        The value that was set
+		 * @param  {String} name  The name of the property
+		 * @param  {Any}    value The value of the property
+		 * @return {Any}          The value that was set
 		 */
-		shadow: function (obj, name, value) {
-			defineProperty(obj, '_' + name, {
-				value: value,
-				configurable: true
-			});
+		defineValueProperty: function (obj, name, value) {
+			defineProperty(obj, name, getValueDescriptor(value));
 			return value;
 		},
 
@@ -79,15 +108,11 @@ define([
 		 * Creates a read only property, with a supplied value
 		 * @param  {Object} obj   The object that the property should be created on
 		 * @param  {String} name  The name of the property
-		 * @param  {Mixed}  value The value of the property
-		 * @return {Mixed}        The value that was set
+		 * @param  {Any}    value The value of the property
+		 * @return {Any}          The value that was set
 		 */
-		readOnly: function (obj, name, value) {
-			defineProperty(obj, name, {
-				value: value,
-				enumerable: true,
-				configurable: true
-			});
+		defineReadOnlyProperty: function (obj, name, value) {
+			defineProperty(obj, name, getReadOnlyDescriptor(value));
 			return value;
 		},
 
@@ -95,40 +120,24 @@ define([
 		 * Creates a pseudo private property, with a supplied value
 		 * @param  {Object} obj   The object that the property should be created on
 		 * @param  {String} name  The name of the property
-		 * @param  {Mixed}  value The value of the property
-		 * @return {Mixed}        The value that was set
+		 * @param  {Any}    value The value of the property
+		 * @return {Any}          The value that was set
 		 */
-		pseudoPrivate: function (obj, name, value) {
-			defineProperty(obj, name, {
-				value: value,
-				configurable: true
-			});
+		definePseudoPrivateProperty: function (obj, name, value) {
+			defineProperty(obj, name, getPseudoPrivateDescriptor(value));
 			return value;
 		},
 
 		/**
-		 * Returns a read only property descriptor
+		 * Creates a hidden (non-enumerable) property, with a supplied value
+		 * @param  {Object} obj   The object that the property should be created on
+		 * @param  {String} name  The name of the property
 		 * @param  {Any}    value The value of the property
-		 * @return {Object}       The property descriptor
+		 * @return {Any}          The value that was set
 		 */
-		readOnlyDescriptor: function (value) {
-			return {
-				value: value,
-				enumerable: true,
-				configurable: true
-			};
-		},
-
-		/**
-		 * Returns a read only, non-enumerable property descriptor
-		 * @param  {Any}    value The value of the property
-		 * @return {Object}       The property descriptor
-		 */
-		hiddenReadOnlyDescriptor: function (value) {
-			return {
-				value: value,
-				configurable: true
-			};
+		defineHiddenProperty: function (obj, name, value) {
+			defineProperty(obj, name, getHiddenDescriptor(value));
+			return value;
 		},
 
 		/**
@@ -136,27 +145,28 @@ define([
 		 * @param  {Any}    value The value of the property
 		 * @return {Object}       The property descriptor
 		 */
-		valueDescriptor: function (value) {
-			return {
-				value: value,
-				writable: true,
-				enumerable: true,
-				configurable: true
-			};
-		},
+		getValueDescriptor: getValueDescriptor,
+
+		/**
+		 * Returns a read only property descriptor
+		 * @param  {Any}    value The value of the property
+		 * @return {Object}       The property descriptor
+		 */
+		getReadOnlyDescriptor: getReadOnlyDescriptor,
+
+		/**
+		 * Returns a read only, non-enumerable property descriptor
+		 * @param  {Any}    value The value of the property
+		 * @return {Object}       The property descriptor
+		 */
+		getPseudoPrivateDescriptor: getPseudoPrivateDescriptor,
 
 		/**
 		 * Return a 'hidden' value property descriptor
 		 * @param  {Any}    value The value of the property
 		 * @return {Object}       The property descriptor
 		 */
-		hiddenDescriptor: function (value) {
-			return {
-				value: value,
-				writable: true,
-				configurable: true
-			};
-		}
+		getHiddenDescriptor: getHiddenDescriptor
 	};
 
 });

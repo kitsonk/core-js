@@ -240,7 +240,7 @@ define([
 		};
 
 		Object.defineProperties(Promise.prototype, {
-			constructor: properties.valueDescriptor(Promise),
+			constructor: properties.getValueDescriptor(Promise),
 
 			/**
 			 * The functions to call when the promise is fulfilled.
@@ -248,7 +248,7 @@ define([
 			 * @param  {Function} onRejection   The function to call when the promise is rejected
 			 * @return {Promise}                A promise that will be fulfilled when the callbacks have completed
 			 */
-			then: properties.readOnlyDescriptor(function (onFulfillment, onRejection) {
+			then: properties.getReadOnlyDescriptor(function (onFulfillment, onRejection) {
 				var promise = this,
 					state = states.get(promise),
 					thenPromise = new this.constructor(function () {});
@@ -271,7 +271,7 @@ define([
 			 * @param  {Function} onRejection The function to call when the promise is rejected
 			 * @return {Promise}              A promise that will be fulfilled when the callback is completed
 			 */
-			'catch': properties.readOnlyDescriptor(function (onRejection) {
+			'catch': properties.getReadOnlyDescriptor(function (onRejection) {
 				return this.then(null, onRejection);
 			})
 		});

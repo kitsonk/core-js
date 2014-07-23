@@ -1,4 +1,4 @@
-define(['../lang'], function (lang) {
+define([], function () {
 	return function (name, ctor, base, props) {
 		base = base || Error;
 
@@ -33,7 +33,7 @@ define(['../lang'], function (lang) {
 			}
 		};
 
-		ErrorCtor.prototype = lang.delegate(base.prototype, props);
+		ErrorCtor.prototype = Object.create(base.prototype, props);
 		ErrorCtor.prototype.name = name;
 		ErrorCtor.prototype.constructor = ErrorCtor;
 

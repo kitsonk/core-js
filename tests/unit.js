@@ -10,6 +10,7 @@ define([
 	'./properties',
 	'./on',
 	'./request',
+	'./stores',
 	'./CallbackQueue',
 	// './Deferred', // remove temporarily
 	'./Evented',

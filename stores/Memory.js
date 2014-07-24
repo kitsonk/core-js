@@ -74,10 +74,7 @@ define([
 
 			return promise;
 		},
-		add: function (object, options) {
-			(options = options || {}).overwrite = false;
-			return this.put(object, options);
-		},
+		/* add: inherited, */
 		remove: function (id) {
 			var store = this,
 				index = store.index,

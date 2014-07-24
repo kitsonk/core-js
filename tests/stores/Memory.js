@@ -19,7 +19,7 @@ define([
 	});
 
 	registerSuite({
-		name: 'core/store/Memory',
+		name: 'core/stores/Memory',
 		'.get()': function () {
 			var dfd = this.async(),
 				promises = [];

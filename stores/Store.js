@@ -12,6 +12,10 @@ define([
 		get: required,
 		getIdentity: required,
 		put: required,
+		add: function (object, options) {
+			(options = options || {}).overwrite = false;
+			return this.put(object, options);
+		},
 		remove: function (id) {
 			var store = this,
 				promise = new Promise(function (resolve, reject) {

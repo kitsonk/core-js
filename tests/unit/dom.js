@@ -1,9 +1,9 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../dom',
-	'../doc',
-	'../has',
+	'../../dom',
+	'../../doc',
+	'../../has',
 	'./dom/all'
 ], function (test, assert, dom, doc, has) {
 

@@ -1,7 +1,7 @@
 define([
 	'intern!object',
 	'intern/chai!assert',
-	'../io-query'
+	'../../io-query'
 ], function (registerSuite, assert, ioQuery) {
 	registerSuite({
 		name: 'core/io-query',

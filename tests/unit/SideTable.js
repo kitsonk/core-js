@@ -1,8 +1,8 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../SideTable',
-	'../has'
+	'../../SideTable',
+	'../../has'
 ], function (test, assert, SideTable, has) {
 	test.suite('core/SideTable', function () {
 		var st, fn, obj, value;

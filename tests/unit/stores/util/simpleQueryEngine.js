@@ -1,7 +1,7 @@
 define([
 	'intern!object',
 	'intern/chai!assert',
-	'../../../stores/util/simpleQueryEngine'
+	'../../../../stores/util/simpleQueryEngine'
 ], function (registerSuite, assert, simpleQueryEngine) {
 	var data;
 

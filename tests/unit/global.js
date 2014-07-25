@@ -1,7 +1,7 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../global'
+	'../../global'
 ], function (test, assert, global) {
 	/* jshint node:true */
 	/* global _testValue: true */

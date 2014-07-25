@@ -1,8 +1,8 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../../dom/remove',
-	'../../doc'
+	'../../../dom/remove',
+	'../../../doc'
 ], function (test, assert, remove, doc) {
 	test.suite('core/dom/remove', function () {
 		test.test('basic', function () {

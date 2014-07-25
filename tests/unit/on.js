@@ -1,9 +1,9 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../on',
-	'../Evented',
-	'../has'
+	'../../on',
+	'../../Evented',
+	'../../has'
 ], function (test, assert, on, Evented, has) {
 	test.suite('core/on', function () {
 		test.test('order of operation', function () {

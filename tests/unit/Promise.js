@@ -1,8 +1,8 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../sniff',
-	'../Promise'
+	'../../sniff',
+	'../../Promise'
 ], function (test, assert, has, Promise) {
 	test.suite('core/Promise', function () {
 		test.suite('Promise constructor', function () {

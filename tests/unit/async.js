@@ -1,7 +1,7 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../async'
+	'../../async'
 ], function (test, assert, async) {
 	test.suite('core/async', function () {
 		test.test('function not called until next turn', function () {

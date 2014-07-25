@@ -1,8 +1,8 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../observe',
-	'../has'
+	'../../observe',
+	'../../has'
 ], function (test, assert, observe, has) {
 	test.suite('core/observe', function () {
 		test.test('feature detection', function () {

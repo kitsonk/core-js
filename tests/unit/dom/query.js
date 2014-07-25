@@ -1,10 +1,10 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../../dom/query',
-	'../../dom/get',
-	'../../doc',
-	'../../on'
+	'../../../dom/query',
+	'../../../dom/get',
+	'../../../doc',
+	'../../../on'
 ], function (test, assert, query, get, doc, on) {
 
 	function emptyDom(root) {

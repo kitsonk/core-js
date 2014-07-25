@@ -1,8 +1,8 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../../dom/matches',
-	'../../doc'
+	'../../../dom/matches',
+	'../../../doc'
 ], function (test, assert, matches, doc) {
 	test.suite('core/dom/matches', function () {
 		var div = doc.body.appendChild(doc.createElement('div')),

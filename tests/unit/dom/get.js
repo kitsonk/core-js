@@ -1,9 +1,9 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../../dom/get',
-	'../../doc',
-	'../../lang'
+	'../../../dom/get',
+	'../../../doc',
+	'../../../lang'
 ], function (test, assert, get, doc, lang) {
 
 	function emptyDom(root) {

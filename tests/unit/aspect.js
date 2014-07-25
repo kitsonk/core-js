@@ -1,7 +1,7 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../aspect'
+	'../../aspect'
 ], function (test, assert, aspect) {
 	test.suite('core/aspect', function () {
 		test.test('aspect.before()', function () {

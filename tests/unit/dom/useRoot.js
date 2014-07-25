@@ -1,7 +1,7 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../../dom/useRoot'
+	'../../../dom/useRoot'
 ], function (test, assert, useRoot) {
 	test.suite('core/dom/useRoot', function () {
 		test.test('basic', function () {

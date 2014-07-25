@@ -1,8 +1,8 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../Evented',
-	'../on'
+	'../../Evented',
+	'../../on'
 ], function (test, assert, Evented, on) {
 	test.suite('core/Evented', function () {
 		test.test('existance', function () {

@@ -1,7 +1,7 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../Registry'
+	'../../Registry'
 ], function (test, assert, Registry) {
 	test.suite('core/Registry', function () {
 		test.test('creation', function () {

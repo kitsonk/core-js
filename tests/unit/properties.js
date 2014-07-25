@@ -1,7 +1,7 @@
 define([
 	'intern!object',
 	'intern/chai!assert',
-	'../properties'
+	'../../properties'
 ], function (registerSuite, assert, properties) {
 	registerSuite({
 		name: 'core/properties',

@@ -1,7 +1,7 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../../dom/parseSelector'
+	'../../../dom/parseSelector'
 ], function (test, assert, parseSelector) {
 	test.suite('core/dom/parseSelector', function () {
 		test.test('basic', function () {

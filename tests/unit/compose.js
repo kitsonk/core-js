@@ -1,7 +1,7 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../compose'
+	'../../compose'
 ], function (test, assert, compose) {
 
 	var required = compose.required,

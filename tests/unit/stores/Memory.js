@@ -1,9 +1,9 @@
 define([
 	'intern!object',
 	'intern/chai!assert',
-	'../../stores/Memory',
-	'../../Promise',
-	'../../errors/StoreError'
+	'../../../stores/Memory',
+	'../../../Promise',
+	'../../../errors/StoreError'
 ], function (registerSuite, assert, Memory, Promise, StoreError) {
 
 	var all = Promise.all.bind(Promise);

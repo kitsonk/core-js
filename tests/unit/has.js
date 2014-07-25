@@ -1,7 +1,7 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../has'
+	'../../has'
 ], function (test, assert, has) {
 	'use strict';
 

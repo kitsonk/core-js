@@ -1,9 +1,9 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../Deferred',
-	'../Promise',
-	'../errors/CancelError'
+	'../../Deferred',
+	'../../Promise',
+	'../../errors/CancelError'
 ], function (test, assert, Deferred, Promise, CancelError) {
 
 	test.suite('core/Deferred', function () {

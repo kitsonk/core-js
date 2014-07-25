@@ -1,7 +1,7 @@
 define([
 	'intern!object',
 	'intern/chai!assert',
-	'../CallbackQueue'
+	'../../CallbackQueue'
 ], function (registerSuite, assert, CallbackQueue) {
 	var queue;
 

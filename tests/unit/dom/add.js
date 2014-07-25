@@ -1,8 +1,8 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../../dom/add',
-	'../../doc'
+	'../../../dom/add',
+	'../../../doc'
 ], function (test, assert, add, doc) {
 
 	function emptyDom(root) {

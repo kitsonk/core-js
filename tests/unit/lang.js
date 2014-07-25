@@ -1,8 +1,8 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../lang',
-	'../global'
+	'../../lang',
+	'../../global'
 ], function (test, assert, lang, global) {
 	'use strict';
 

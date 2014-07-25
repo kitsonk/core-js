@@ -1,7 +1,7 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../../stores/Store'
+	'../../../stores/Store'
 ], function (test, assert, Store) {
 	test.suite('core/stores/Store', function () {
 		test.test('basic', function () {

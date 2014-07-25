@@ -1,8 +1,8 @@
 define([
 	'intern!tdd',
 	'intern/chai!assert',
-	'../request',
-	'../has'
+	'../../request',
+	'../../has'
 ], function (test, assert, request, has) {
 
 	var requestUri = has('host-node') ? 'https://api.github.com/users/kitsonk' : '../../tests/resources/request.json';

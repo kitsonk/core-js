@@ -1,20 +1,20 @@
 define([
-	'./aspect',
-	'./async',
-	'./compose',
+	'./unit/aspect',
+	'./unit/async',
+	'./unit/compose',
 	'../has!host-browser?./dom',
-	'./global',
-	'./has',
-	'./io-query',
-	'./lang',
-	'./properties',
-	'./on',
-	'./request',
-	'./stores',
-	'./CallbackQueue',
-	// './Deferred', // remove temporarily
-	'./Evented',
-	'./Promise',
-	'./Registry',
-	'./SideTable'
+	'./unit/global',
+	'./unit/has',
+	'./unit/io-query',
+	'./unit/lang',
+	'./unit/properties',
+	'./unit/on',
+	'./unit/request',
+	'./unit/stores',
+	'./unit/CallbackQueue',
+	// './unit/Deferred', // remove temporarily
+	'./unit/Evented',
+	'./unit/Promise',
+	'./unit/Registry',
+	'./unit/SideTable'
 ], 1);

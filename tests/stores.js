@@ -1,3 +1,4 @@
 define([
-	'./stores/Memory'
+	'./stores/Memory',
+	'./stores/util/simpleQueryEngine'
 ], 1);

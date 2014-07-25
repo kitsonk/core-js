@@ -3,7 +3,8 @@
   "version": "0.0.3",
   "devDependencies": {
     "grunt": "^0.4.5",
-    "intern": "^2.0.1"
+    "intern": "^2.0.1",
+    "sinon": "^1.10.3"
   },
   "licenses": [
     {

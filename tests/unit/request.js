@@ -5,7 +5,7 @@ define([
 	'../../has'
 ], function (test, assert, request, has) {
 
-	var requestUri = has('host-node') ? 'https://api.github.com/users/kitsonk' : '../../tests/resources/request.json';
+	var requestUri = has('host-node') ? 'https://api.github.com/users/kitsonk' : '../../tests/unit/resources/request.json';
 
 	test.suite('core/request', function () {
 		test.test('basic', function () {

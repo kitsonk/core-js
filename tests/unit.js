@@ -2,7 +2,7 @@ define([
 	'./unit/aspect',
 	'./unit/async',
 	'./unit/compose',
-	'../has!host-browser?./dom',
+	'../has!host-browser?./unit/dom',
 	'./unit/global',
 	'./unit/has',
 	'./unit/io-query',

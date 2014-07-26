@@ -1,6 +1,6 @@
 define({
 	proxyPort: 9000,
-	proxyUrl: 'http://localhost:9000/',
+	proxyUrl: 'http://localhost:9001/',
 
 	capabilities: {
 		'selenium-version': '2.41.0',

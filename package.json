@@ -1,11 +1,20 @@
 {
   "name": "core",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "devDependencies": {
-    "grunt": "^0.4.5",
     "intern": "^2.0.1",
+    "grunt": "^0.4.5",
+    "http-proxy": "^0.10.3",
+    "glob": "^3.2.7",
+    "jsgi-node": "^0.3.1",
+    "formidable": "^1.0.14",
+    "when": "^2.7.0",
     "sinon": "^1.10.3"
   },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "description": "A prototype Dojo 2 library",
   "licenses": [
     {
       "type": "BSD-3-Clause",

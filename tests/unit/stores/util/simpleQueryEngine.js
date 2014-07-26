@@ -58,11 +58,12 @@ define([
 		},
 		'sorting function': function () {
 			var query = simpleQueryEngine({ even: true }, { sort: function (a, b) {
-					return a.other > b.other;
+					return a.other > b.other ? 1 : a === b ? 0 : -1;
 				}}),
 				results = query(data);
 			assert.equal(results.length, 3);
 			assert.equal(results[0].id, 2);
+			console.log(results);
 			assert.equal(results[1].id, 6);
 		},
 		'sorting object': function () {

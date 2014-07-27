@@ -1,12 +1,22 @@
 define([
-	'../Deferred'
-], function (Deferred) {
+	'../has',
+	'../io-query',
+	'../Deferred',
+	'../errors/CancelError',
+	'../errors/RequestTimeoutError'
+], function (has, ioQuery, Deferred, CancelError, RequestTimeoutError) {
 	'use strict';
+
+	has.add('xhr2-formdata', function (global) {
+		return 'FormData' in global;
+	});
+
+	var objectToQuery = ioQuery.objectToQuery;
 	
 	function xhr(url, options) {
 		var deferred = new Deferred(function (reason) {
 				request && request.abort();
-				throw reason;
+				return new CancelError(reason);
 			}),
 			request = new XMLHttpRequest(),
 			response = {
@@ -17,9 +27,9 @@ define([
 				nativeResponse: request,
 				requestOptions: options,
 				statusCode: null,
-				statusText: null,
-				url: url
-			};
+				statusText: null
+			},
+			hasQuestionMark = !!~url.indexOf('?');
 
 		options = options || {};
 		options.method = options.method || 'GET';
@@ -32,10 +42,26 @@ define([
 			})();
 		}
 
+		/* Move to request? */
+		if (options.query) {
+			url += (hasQuestionMark ? '&' : '?') +
+				(typeof options.query === 'object' ? objectToQuery(options.query) : options.query);
+			hasQuestionMark = true;
+		}
+
+		if (options.preventCache) {
+			url += (hasQuestionMark ? '&' : '?') + 'request.preventCache=' + (+(new Date()));
+		}
+
+		response.url = url;
 		request.open(options.method, url, !options.blockMainThread, options.user, options.password);
 
 		request.onerror = function (event) {
 			deferred.reject(event.error);
+		};
+
+		request.ontimeout = function (event) {
+			deferred.reject(new RequestTimeoutError('Request timed out in ' + event.target.timeout + ' milliseconds'));
 		};
 
 		request.onload = function () {
@@ -64,7 +90,15 @@ define([
 			request.setRequestHeader(header, options.headers[header]);
 		}
 
-		request.send(options.data);
+		if (has('xhr2-formdata') && options.data && options.data instanceof FormData) {
+			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			request.send(options.data);
+		}
+		else {
+			request.send(typeof options.data === 'object' ? objectToQuery(options.data) : options.data);
+		}
+
+		deferred.promise.cancel = deferred.cancel;
 
 		return deferred.promise;
 	}

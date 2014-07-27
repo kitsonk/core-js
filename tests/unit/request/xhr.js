@@ -32,6 +32,26 @@ define([
 				assert.strictEqual(response.statusCode, 404);
 			});
 		},
+		'get with query': function () {
+			return xhr('/__services/request/xhr?color=blue', {
+				query: {
+					foo: [ 'bar', 'baz' ],
+					thud: 'thonk',
+					xyzzy: 3
+				}
+			}).then(function (response) {
+				var data = JSON.parse(response.data),
+					query = data.query;
+				assert.strictEqual(data.method, 'GET');
+				assert(query.color && query.foo && query.foo.length && query.thud && query.xyzzy);
+				assert.strictEqual(query.color, 'blue');
+				assert.strictEqual(query.foo.length, 2);
+				assert.strictEqual(query.thud, 'thonk');
+				assert.strictEqual(query.xyzzy, '3');
+				assert.strictEqual(response.url,
+					'/__services/request/xhr?color=blue&foo=bar&foo=baz&thud=thonk&xyzzy=3');
+			});
+		},
 		'post': function () {
 			return xhr('/__services/request/xhr', {
 				method: 'post',
@@ -41,6 +61,46 @@ define([
 				assert.strictEqual(data.method, 'POST');
 				assert.strictEqual(data.payload.color, 'blue');
 				return response;
+			});
+		},
+		'post with query': function () {
+			return xhr('/__services/request/xhr', {
+				method: 'post',
+				query: {
+					foo: [ 'bar', 'baz' ],
+					thud: 'thonk',
+					xyzzy: 3
+				},
+				data: { color: 'blue' }
+			}).then(function (response) {
+				var data = JSON.parse(response.data),
+					query = data.query,
+					payload = data.payload;
+
+				assert.strictEqual(data.method, 'POST');
+
+				assert(query);
+				assert.deepEqual(query.foo, [ 'bar', 'baz' ]);
+				assert.strictEqual(query.thud, 'thonk');
+				assert.strictEqual(query.xyzzy, '3');
+
+				assert(payload);
+				assert.strictEqual(payload.color, 'blue');
+			});
+		},
+		'post with string payload': function () {
+			return xhr('/__services/request/xhr', {
+				method: 'post',
+				data: 'foo=bar&color=blue&height=average'
+			}).then(function (response) {
+				var data = JSON.parse(response.data),
+					payload = data.payload;
+
+				assert.strictEqual(data.method, 'POST');
+				assert(payload);
+				assert.strictEqual(payload.foo, 'bar');
+				assert.strictEqual(payload.color, 'blue');
+				assert.strictEqual(payload.height, 'average');
 			});
 		},
 		'put': function () {
@@ -67,8 +127,9 @@ define([
 		},
 		'timeout': function () {
 			var dfd = this.async(3000),
-				promise = xhr('/__services/request/xhr?delay=3000', {
-					timeout: 1000
+				promise = xhr('/__services/request/xhr', {
+					timeout: 1000,
+					query: { delay: 3000 }
 				});
 
 			promise.then(dfd.reject.bind(dfd), dfd.callback(function (error) {
@@ -77,7 +138,9 @@ define([
 		},
 		'cancel': function () {
 			var dfd = this.async(3000),
-				promise = xhr('/__services/request/xhr?delay=3000');
+				promise = xhr('/__services/request/xhr', {
+					query: { delay: 3000 }
+				});
 
 			promise.then(dfd.reject.bind(dfd), dfd.callback(function (error) {
 				assert.instanceOf(error, CancelError);
@@ -88,8 +151,9 @@ define([
 			var dfd = this.async();
 
 			var start = Date.now();
-			xhr('/__services/request/xhr?delay=1000', {
-				blockMainThread: true
+			xhr('/__services/request/xhr', {
+				blockMainThread: true,
+				query: { delay: 1000 }
 			}).then(dfd.callback(function (response) {
 				assert(response);
 			}));

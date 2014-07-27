@@ -2,7 +2,8 @@ define([
 	'intern!tdd',
 	'intern/chai!assert',
 	'../../request',
-	'../../has!host-browser?./request/xhr'
+	'../../has!host-browser?./request/xhr',
+	'../../has!host-node?./request/node'
 ], function (test, assert, request) {
 
 	test.suite('core/request', function () {

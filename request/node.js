@@ -2,13 +2,17 @@ define([
 	'../node!http',
 	'../node!https',
 	'../node!url',
+	'../errors/CancelError',
+	'../errors/RequestTimeoutError',
 	'../Deferred',
-], function (http, https, urlUtil, Deferred) {
+	'../io-query'
+], function (http, https, urlUtil, CancelError, RequestTimeoutError, Deferred, ioQuery) {
 	'use strict';
 
 	/* jshint node:true */
 
-	var noop = function () {};
+	var noop = function () {},
+		objectToQuery = ioQuery.objectToQuery;
 
 	function normalizeHeaders(headers) {
 		var normalizedHeaders = {};
@@ -21,12 +25,24 @@ define([
 	function node(url, options) {
 		var deferred = new Deferred(function (reason) {
 				request && request.abort();
-				throw reason;
+				return typeof reason === 'string' ? new CancelError(reason) : reason;
 			}),
-			promise = deferred.promise;
+			promise = deferred.promise,
+			hasQuestionMark = !!~url.indexOf('?');
 
 		options = options || {};
 		options.method = options.method || 'GET';
+
+		/* TODO: Move to core/request? */
+		if (options.query) {
+			url += (hasQuestionMark ? '&' : '?') +
+				(typeof options.query === 'object' ? objectToQuery(options.query) : options.query);
+			hasQuestionMark = true;
+		}
+
+		if (options.preventCache) {
+			url += (hasQuestionMark ? '&' : '?') + 'request.preventCache=' + (+(new Date()));
+		}
 
 		var parsedUrl = urlUtil.parse(options.proxy || url),
 			socketOptions = options.socketOptions,
@@ -112,6 +128,8 @@ define([
 				data = [];
 			}
 
+			response.nativeResponse = nativeResponse;
+
 			options.streamEncoding && nativeResponse.setEncoding(options.streamEncoding);
 
 			nativeResponse.on('data', function (chunk) {
@@ -127,6 +145,9 @@ define([
 					response.data = options.streamEncoding ? data.join('') : Buffer.concat(data, loaded);
 				}
 
+				response.statusCode = nativeResponse.statusCode;
+				response.statusText = nativeResponse.statusText;
+
 				deferred.resolve(response);
 			});
 		});
@@ -138,6 +159,9 @@ define([
 				options.data.pipe(request);
 			}
 			else {
+				if (typeof options.data === 'object') {
+					options.data = objectToQuery(options.data);
+				}
 				request.end(options.data, options.dataEncoding);
 			}
 		}
@@ -148,9 +172,7 @@ define([
 		if (options.timeout > 0 && options.timeout !== Infinity) {
 			timeout = (function () {
 				var timer = setTimeout(function () {
-					var error = new Error('Request timed out after ' + options.timeout + 'ms');
-					error.name = 'RequestTimeoutError';
-					deferred.cancel(error);
+					deferred.cancel(new RequestTimeoutError('Request timed out after ' + options.timeout + 'ms'));
 				}, options.timeout);
 
 				return {
@@ -161,6 +183,8 @@ define([
 				};
 			})();
 		}
+
+		promise.cancel = deferred.cancel;
 
 		return promise;
 	}

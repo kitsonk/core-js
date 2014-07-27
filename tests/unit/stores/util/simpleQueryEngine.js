@@ -63,7 +63,6 @@ define([
 				results = query(data);
 			assert.equal(results.length, 3);
 			assert.equal(results[0].id, 2);
-			console.log(results);
 			assert.equal(results[1].id, 6);
 		},
 		'sorting object': function () {

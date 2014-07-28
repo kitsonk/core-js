@@ -6,13 +6,12 @@ var profile = (function () {
 				'core/package': 1,
 				'core/package.json': 1,
 				'core/tests': 1,
-				'core/third_party': 1,
-				'core/node_modules': 1
+				'core/node_modules': 1,
+				'core/Gruntfile': 1
 			};
 			return (mid in list) ||
 				/^core\/tests\/\w+$/ ||
 				/^core\/node_modules\/\w+$/ ||
-				// /^core\/third_party\/\w+$/ ||
 				/(png|jpg|jpeg|gif|tiff)$/.test(filename);
 		};
 

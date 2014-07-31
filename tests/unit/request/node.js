@@ -3,11 +3,8 @@ define([
 	'intern/chai!assert',
 	'../../../request/node',
 	'../../../errors/RequestTimeoutError',
-	'../../../errors/CancelError',
-	'../../../async',
-	'../../../dom/query'
-], function (registerSuite, assert, node, RequestTimeoutError, CancelError, async, query) {
-
+	'../../../errors/CancelError'
+], function (registerSuite, assert, node, RequestTimeoutError, CancelError) {
 	var baseUrl = 'http://localhost:9001';
 
 	registerSuite({

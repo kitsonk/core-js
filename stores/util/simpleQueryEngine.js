@@ -1,4 +1,6 @@
 define([], function () {
+	'use strict';
+	
 	return function (query, options) {
 		switch (typeof query) {
 		case 'object':

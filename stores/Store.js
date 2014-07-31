@@ -1,8 +1,7 @@
 define([
 	'../compose',
-	'../Evented',
-	'../Promise'
-], function (compose, Evented, Promise) {
+	'../Evented'
+], function (compose, Evented) {
 	'use strict';
 
 	var required = compose.required;
@@ -13,29 +12,17 @@ define([
 		getIdentity: required,
 		put: required,
 		add: function (object, options) {
+			var store = this;
 			(options = options || {}).overwrite = false;
-			return this.put(object, options);
-		},
-		remove: function (id) {
-			var store = this,
-				promise = new Promise(function (resolve, reject) {
-					delete store.index[id];
-					var data = store.data,
-						idProperty = store.idProperty,
-						record;
-					for (var i = 0, l = data.length; i < l; i++) {
-						if (data[i][idProperty] === id) {
-							record = data[i];
-							data.splice(i, 1);
-							resolve(record);
-						}
-					}
-					if (!record) {
-						reject(new Error('Record not Found.'));
-					}
+			return store.put(object, options).then(function (id) {
+				store.emit('add', {
+					object: object,
+					options: options,
+					id: id
 				});
-			return promise;
+			});
 		},
+		remove: required,
 		query: required
 	});
 

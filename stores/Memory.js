@@ -8,6 +8,7 @@ define([
 	'./util/queryResults',
 	'./util/simpleQueryEngine'
 ], function (compose, lang, Promise, SideTable, StoreError, Store, queryResults, simpleQueryEngine) {
+	'use strict';
 
 	var dataSideTable = new SideTable(),
 		property = compose.property,

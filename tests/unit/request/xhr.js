@@ -7,6 +7,7 @@ define([
 	'../../../async',
 	'../../../dom/query'
 ], function (registerSuite, assert, xhr, RequestTimeoutError, CancelError, async, query) {
+	
 	var hasFormData = 'FormData' in this && typeof FormData === 'function',
 		formData;
 

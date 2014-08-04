@@ -59,17 +59,17 @@ define([
 		'.get()': {
 			beforeEach: function () {
 				var data = {
-					id: 'node1.1',
-					name: 'node1.1',
-					someProperty: 'somePropertyA1',
-					children: [
-						{ $ref: 'node1.1.1', name: 'node1.1.1' },
-						{ $ref: 'node1.1.2', name: 'node1.1.2' }
-					]
-				};
+						id: 'node1.1',
+						name: 'node1.1',
+						someProperty: 'somePropertyA1',
+						children: [
+							{ $ref: 'node1.1.1', name: 'node1.1.1' },
+							{ $ref: 'node1.1.2', name: 'node1.1.2' }
+						]
+					};
 
 				requestStub.returns(new Promise(function (resolve) {
-					resolve(data);
+					resolve({ data: data });
 				}));
 			},
 			'test': function () {
@@ -88,23 +88,40 @@ define([
 				xhrOptions = requestStub.lastCall.args[1];
 
 				assertHeaders(xhrOptions.headers, requestHeaders);
+			},
+			'emit event': function () {
+				var dfd = this.async(),
+					handle = store.on('get', dfd.callback(function (e) {
+						assert.strictEqual(e.target, store);
+						assert.equal(e.type, 'get');
+						assert.equal(e.object.name, 'node1.1');
+						assert(e.options.headers);
+						handle.remove();
+					}));
+
+				store.get('destinationUrl', { headers: requestHeaders });
 			}
 		},
 		'.query()': {
 			beforeEach: function () {
-				var data = [
-					{ id: 'node1', name: 'node1', someProperty: 'somePropertyA', children: [
-						{ $ref: 'node1.1', name: 'node1.1', children: true },
-						{ $ref: 'node1.2', name: 'node1.2' }
-					] },
-					{ id: 'node2', name: 'node2', someProperty: 'somePropertyB' },
-					{ id: 'node3', name: 'node3', someProperty: 'somePropertyC' },
-					{ id: 'node4', name: 'node4', someProperty: 'somePropertyA' },
-					{ id: 'node5', name: 'node5', someProperty: 'somePropertyB' }
-				];
+				var response = {
+						getHeader: function () {
+							return '1-10/25';
+						},
+						data: [
+							{ id: 'node1', name: 'node1', someProperty: 'somePropertyA', children: [
+								{ $ref: 'node1.1', name: 'node1.1', children: true },
+								{ $ref: 'node1.2', name: 'node1.2' }
+							] },
+							{ id: 'node2', name: 'node2', someProperty: 'somePropertyB' },
+							{ id: 'node3', name: 'node3', someProperty: 'somePropertyC' },
+							{ id: 'node4', name: 'node4', someProperty: 'somePropertyA' },
+							{ id: 'node5', name: 'node5', someProperty: 'somePropertyB' }
+						]
+					};
 				
 				requestStub.returns(new Promise(function (resolve) {
-					resolve(data);
+					resolve(response);
 				}));
 			},
 			'test': function () {
@@ -129,6 +146,25 @@ define([
 				xhrOptions = requestStub.lastCall.args[1];
 
 				assertHeaders(xhrOptions.headers, requestHeaders, expectedRangeHeaders);
+			},
+			'total': function () {
+				return store.query({}, { headers: requestHeaders }).total.then(function (total) {
+					assert.equal(total, 25);
+				});
+			},
+			'emit event': function () {
+				var dfd = this.async(),
+					handle = store.on('query', dfd.callback(function (e) {
+						assert.strictEqual(e.target, store);
+						assert.equal(e.type, 'query');
+						assert.equal(e.query, '?foo=bar');
+						assert(e.response.data);
+						assert(e.results.length, 5);
+						assert(e.options.headers);
+						handle.remove();
+					}));
+
+				store.query({ foo: 'bar' }, { headers: requestHeaders });
 			}
 		},
 		'.remove()': {
@@ -139,6 +175,19 @@ define([
 				xhrOptions = requestStub.lastCall.args[1];
 
 				assertHeaders(xhrOptions.headers, requestHeaders);
+			},
+			'emit event': function () {
+				var dfd = this.async(),
+					handle = store.on('remove', dfd.callback(function (e) {
+						assert.strictEqual(e.target, store);
+						assert.equal(e.type, 'remove');
+						assert.equal(e.id, 'destinationUrl');
+						assert(e.options.headers);
+						assert(e.response);
+						handle.remove();
+					}));
+
+				store.remove('destinationUrl', { headers: requestHeaders });
 			}
 		},
 		'.put()': {
@@ -149,6 +198,19 @@ define([
 				xhrOptions = requestStub.lastCall.args[1];
 
 				assertHeaders(xhrOptions.headers, requestHeaders);
+			},
+			'emit event': function () {
+				var dfd = this.async(),
+					handle = store.on('put', dfd.callback(function (e) {
+						assert.strictEqual(e.target, store);
+						assert.equal(e.type, 'put');
+						assert(e.object);
+						assert(e.options.headers);
+						assert(e.response);
+						handle.remove();
+					}));
+
+				store.put({}, { headers: requestHeaders });
 			}
 		},
 		'.add()': {
@@ -159,6 +221,23 @@ define([
 				xhrOptions = requestStub.lastCall.args[1];
 
 				assertHeaders(xhrOptions.headers, requestHeaders);
+			},
+			'emit event': function () {
+				var dfd = this.async(),
+					handle = store.on('add', dfd.callback(function (e) {
+						assert.strictEqual(e.target, store);
+						assert.equal(e.type, 'add');
+						assert(e.object);
+						assert(e.options.headers);
+						assert(e.response);
+						handle.remove();
+					})),
+					handle2 = store.on('put', function () {
+						handle2.remove();
+						dfd.reject();
+					});
+
+				store.add({}, { headers: requestHeaders });
 			}
 		},
 		teardown: function () {

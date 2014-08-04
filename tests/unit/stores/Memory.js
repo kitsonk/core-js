@@ -3,8 +3,9 @@ define([
 	'intern/chai!assert',
 	'../../../stores/Memory',
 	'../../../Promise',
-	'../../../errors/StoreError'
-], function (registerSuite, assert, Memory, Promise, StoreError) {
+	'../../../errors/StoreError',
+	'../../../on'
+], function (registerSuite, assert, Memory, Promise, StoreError, on) {
 
 	var all = Promise.all.bind(Promise);
 
@@ -179,6 +180,74 @@ define([
 				assert.equal(results[0].length, 3);
 				assert.equal(results[1].length, 1);
 			}));
+		},
+		'events': {
+			'using on': function () {
+				var dfd = this.async();
+				on(store, 'get', dfd.callback(function (e) {
+					assert(e);
+				}));
+				store.get(1);
+			},
+			'get': function () {
+				var dfd = this.async(),
+					handle = store.on('get', dfd.callback(function (e) {
+						assert.strictEqual(e.target, store);
+						assert.equal(e.type, 'get');
+						assert.equal(e.id, 3);
+						assert.isUndefined(e.options);
+						assert.equal(e.object.name, 'three');
+						handle.remove();
+					}));
+				store.get(3);
+			},
+			'add': function () {
+				var dfd = this.async(),
+					handle = store.on('add', dfd.callback(function (e) {
+						assert.strictEqual(e.target, store);
+						assert.equal(e.type, 'add');
+						assert.equal(e.response, 8);
+						assert.equal(e.object.name, 'eight');
+						handle.remove();
+					})),
+					handle2 = store.on('put', function () {
+						handle2.remove();
+						dfd.reject();
+					});
+				store.add({ id: 8, name: 'eight', event: true, prime: false });
+			},
+			'put': function () {
+				var dfd = this.async(),
+					handle = store.on('put', dfd.callback(function (e) {
+						assert.strictEqual(e.target, store);
+						assert.equal(e.type, 'put');
+						assert.equal(e.response, 8);
+						assert.isFalse(e.object.square);
+						handle.remove();
+					}));
+				store.put({ id: 8, name: 'eight', square: false, event: true, prime: false });
+			},
+			'remove': function () {
+				var dfd = this.async(),
+					handle = store.on('remove', dfd.callback(function (e) {
+						assert.strictEqual(e.target, store);
+						assert.equal(e.type, 'remove');
+						assert.equal(e.id, 8);
+						handle.remove();
+					}));
+				store.remove(8);
+			},
+			'query': function () {
+				var dfd = this.async(),
+					handle = store.on('query', dfd.callback(function (e) {
+						assert.strictEqual(e.target, store);
+						assert.equal(e.type, 'query');
+						assert.deepEqual(e.query, { name: 'two' });
+						assert.equal(e.results.length, 1);
+						handle.remove();
+					}));
+				store.query({ name: 'two' });
+			}
 		}
 	});
 });

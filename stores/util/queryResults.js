@@ -34,8 +34,8 @@ define([
 		iteratorMethods.forEach(function (method) {
 			decorate(resultsPromise, method);
 		});
-		resultsPromise.total = resultsPromise.then(function (results) {
-			return results.total || results.length;
+		resultsPromise.total = results.total || resultsPromise.then(function (results) {
+			return results.length;
 		});
 		return resultsPromise;
 	};

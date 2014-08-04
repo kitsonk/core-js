@@ -1,7 +1,8 @@
 define([
 	'../compose',
-	'../Evented'
-], function (compose, Evented) {
+	'../Evented',
+	'./util/emitEvent'
+], function (compose, Evented, emitEvent) {
 	'use strict';
 
 	var required = compose.required;
@@ -12,15 +13,16 @@ define([
 		getIdentity: required,
 		put: required,
 		add: function (object, options) {
-			var store = this;
+			var store = this,
+				promise;
 			(options = options || {}).overwrite = false;
-			return store.put(object, options).then(function (id) {
-				store.emit('add', {
-					object: object,
-					options: options,
-					id: id
-				});
+			promise = store.put(object, options, true);
+
+			promise.then(function (response) {
+				emitEvent(store, 'add', options, response, object);
 			});
+
+			return promise;
 		},
 		remove: required,
 		query: required

@@ -5,9 +5,10 @@ define([
 	'../SideTable',
 	'../errors/StoreError',
 	'./Store',
+	'./util/emitEvent',
 	'./util/queryResults',
 	'./util/simpleQueryEngine'
-], function (compose, lang, Promise, SideTable, StoreError, Store, queryResults, simpleQueryEngine) {
+], function (compose, lang, Promise, SideTable, StoreError, Store, emitEvent, queryResults, simpleQueryEngine) {
 	'use strict';
 
 	var dataSideTable = new SideTable(),
@@ -36,11 +37,16 @@ define([
 		idProperty: 'id',
 		index: null,
 		queryEngine: simpleQueryEngine,
-		get: function (id) {
+		get: function (id, options) {
 			var store = this,
 				promise = new Promise(function (resolve) {
 					resolve(store.data[store.index[id]]);
 				});
+
+			promise.then(function (object) {
+				emitEvent(store, 'get', options, undefined, object, id);
+			});
+
 			return promise;
 		},
 		getIdentity: function (object) {
@@ -50,7 +56,7 @@ define([
 				});
 			return promise;
 		},
-		put: function (object, options) {
+		put: function (object, options, supressEmit) {
 			var store = this,
 				data = store.data,
 				index = store.index,
@@ -73,10 +79,16 @@ define([
 				resolve(id);
 			});
 
+			if (!supressEmit) {
+				promise.then(function (response) {
+					emitEvent(store, 'put', options, response, object);
+				});
+			}
+
 			return promise;
 		},
 		/* add: inherited, */
-		remove: function (id) {
+		remove: function (id, options) {
 			var store = this,
 				index = store.index,
 				data = store.data;
@@ -92,10 +104,20 @@ define([
 				}
 			});
 
+			promise.then(function (response) {
+				emitEvent(store, 'remove', options, response, undefined, id);
+			});
+
 			return promise;
 		},
 		query: function (query, options) {
-			return queryResults(this.queryEngine(query, options)(this.data));
+			var store = this,
+				promise = queryResults(this.queryEngine(query, options)(this.data));
+
+			promise.then(function (results) {
+				emitEvent(store, 'query', options, results, undefined, undefined, query, results);
+			});
+			return promise;
 		}
 	});
 

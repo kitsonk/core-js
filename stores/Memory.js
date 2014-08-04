@@ -4,7 +4,7 @@ define([
 	'../Promise',
 	'../SideTable',
 	'../errors/StoreError',
-	'./Store',
+	'./_Store',
 	'./util/emitEvent',
 	'./util/queryResults',
 	'./util/simpleQueryEngine'

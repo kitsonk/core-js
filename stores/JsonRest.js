@@ -4,7 +4,7 @@ define([
 	'../lang',
 	'../on',
 	'../request',
-	'./Store',
+	'./_Store',
 	'./util/emitEvent',
 	'./util/queryResults'
 ], function (compose, ioQuery, lang, on, request, Store, emitEvent, queryResults) {

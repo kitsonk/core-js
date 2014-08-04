@@ -4,6 +4,8 @@ define([
 	'../../sniff',
 	'../../Promise'
 ], function (test, assert, has, Promise) {
+	'use strict';
+	
 	test.suite('core/Promise', function () {
 		test.suite('Promise constructor', function () {
 			test.test('should exist and have length 1', function () {

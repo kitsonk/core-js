@@ -6,7 +6,7 @@ define([
 	var resolve = Promise.resolve.bind(Promise),
 		arrayProto = Array.prototype,
 		slice = arrayProto.slice,
-		iteratorMethods = [ 'forEach', 'map', 'filter' ];
+		iteratorMethods = [ 'forEach', 'map', 'filter', 'every', 'some', 'reduce', 'reduceRight' ];
 
 	/**
 	 * Decorates a promise with a method derived from the Array.prototype wrapped in a promise that resolves when the

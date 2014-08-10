@@ -25,7 +25,12 @@ define([
 			return promise;
 		},
 		remove: required,
-		query: required
+		query: required,
+		onget: null,
+		onput: null,
+		onadd: null,
+		onremove: null,
+		onquery: null
 	});
 
 	return Store;

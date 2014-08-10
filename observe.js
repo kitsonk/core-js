@@ -1,9 +1,10 @@
 define([
 	'./aspect',
+	'./async',
 	'./has',
 	'./properties',
 	'./SideTable'
-], function (aspect, has, properties, SideTable) {
+], function (aspect, async, has, properties, SideTable) {
 	'use strict';
 
 	/* Object.observe detection, specifically designed to not offload to shims/polyfills */
@@ -19,7 +20,7 @@ define([
 		defineProperty = Object.defineProperty,
 		defineProperties = Object.defineProperties,
 		getReadOnlyDescriptor = properties.getReadOnlyDescriptor,
-		getHiddenReadOnlyDescriptor = properties.getHiddenReadOnlyDescriptor,
+		getPseudoPrivateDescriptor = properties.getPseudoPrivateDescriptor,
 		getValueDescriptor = properties.getValueDescriptor,
 		keys = Object.keys,
 		slice = Array.prototype.slice,
@@ -81,19 +82,21 @@ define([
 		 * @param  {Array}  targets      The targeted observer functions the records should be delivered to
 		 */
 		var enqueueChangeRecord = function (changeRecord, targets, arrayFlag) {
-			targets.forEach(function (observer) {
-				var pending = pendingChangeRecords.get(observer),
-					acceptArray = ~observer.accept.indexOf('splice');
+			var observer, pending, acceptArray;
+			for (var i = 0, l = targets.length; i < l; i++) {
+				observer = targets[i];
+				pending = pendingChangeRecords.get(observer);
+				acceptArray = ~observer.accept.indexOf('splice');
 				if (!acceptArray || (acceptArray && arrayFlag)) {
 					pending.push(changeRecord);
 				}
-			});
+			}
 			/* Trigger a transaction to deliver the records that should complete at the end of turn */
 			if (!transaction) {
-				transaction = setTimeout(function () {
+				transaction = async(function () {
 					deliverAllChangeRecords();
 					transaction = undefined;
-				}, 0);
+				});
 			}
 		};
 
@@ -143,7 +146,7 @@ define([
 
 		/**
 		 * A record of a change to an object
-		 * @param {String} type     The type of the change, `new`, `updated`, `reconfigured` or `deleted`.
+		 * @param {String} type     The type of the change, `new`, `update`, `reconfigured` or `delete`.
 		 * @param {[type]} object   The object where the change occurred
 		 * @param {[type]} name     The name of the property
 		 * @param {[type]} oldValue The properties previous value
@@ -206,7 +209,7 @@ define([
 			 */
 			function notifyUpdated(target, name, oldValue) {
 				var notifier = notifiers.get(target),
-					changeRecord = createChangeRecord('updated', target, name, oldValue);
+					changeRecord = createChangeRecord('update', target, name, oldValue);
 				notifier.notify(changeRecord);
 			}
 
@@ -309,7 +312,7 @@ define([
 					targetObservedProperties[name] = {
 						newDescriptor: newDescriptor
 					};
-					notify('new');
+					notify('add');
 				}
 			}
 			else if (descriptor) {
@@ -409,7 +412,7 @@ define([
 
 			var notifier = notifiers.get(target);
 			if (notifier) {
-				var changeRecord = createChangeRecord('deleted', target, name, value);
+				var changeRecord = createChangeRecord('delete', target, name, value);
 				notifier.notify(changeRecord);
 			}
 		};
@@ -417,7 +420,7 @@ define([
 		/**
 		 * Remove and array of properties from the target object
 		 * @param  {Object}        target The target where the properties should be removed
-		 * @param  {Array(String)} names  The names of the properties to be deleted from the target
+		 * @param  {Array(String)} names  The names of the properties to be delete from the target
 		 */
 		var removeObservableProperties = function (target, names) {
 			names.forEach(function (name) {
@@ -457,10 +460,10 @@ define([
 		/* this will make it API compatible when offloading to Object.observe */
 		decorateArray = function (array) {
 			defineProperties(array, {
-				get: getHiddenReadOnlyDescriptor(function (idx) {
+				get: getPseudoPrivateDescriptor(function (idx) {
 					return this[idx];
 				}),
-				set: getHiddenReadOnlyDescriptor(function (idx, value) {
+				set: getPseudoPrivateDescriptor(function (idx, value) {
 					this[idx] = value;
 				})
 			});
@@ -507,13 +510,13 @@ define([
 							newValue = newArr[i];
 							if (oldValue !== newValue) {
 								if (typeof newValue === 'undefined') {
-									changeRecords.push(createChangeRecord('deleted', newArr, i, oldValue));
+									changeRecords.push(createChangeRecord('delete', newArr, i, oldValue));
 								}
 								else if (typeof newValue === 'undefined') {
-									changeRecords.push(createChangeRecord('new', newArr, i));
+									changeRecords.push(createChangeRecord('add', newArr, i));
 								}
 								else {
-									changeRecords.push(createChangeRecord('updated', newArr, i, oldValue));
+									changeRecords.push(createChangeRecord('update', newArr, i, oldValue));
 								}
 							}
 						}
@@ -521,13 +524,13 @@ define([
 							oldValue = oldArr[i];
 							newValue = newArr[i];
 							if (typeof newValue !== 'undefined') {
-								changeRecords.push(createChangeRecord('new', newArr, i));
+								changeRecords.push(createChangeRecord('add', newArr, i));
 							}
 						}
 
 						/* record change in length */
 						if (oldLength !== newLength) {
-							changeRecords.push(createChangeRecord('updated', newArr, 'length', oldLength));
+							changeRecords.push(createChangeRecord('update', newArr, 'length', oldLength));
 						}
 
 						return changeRecords;
@@ -626,10 +629,10 @@ define([
 			/* We also add `get` and `set` to be able to track changes to the array, since directly watching all the elements
 			 * would be a bit onerous */
 			defineProperties(array, {
-				get: getHiddenReadOnlyDescriptor(function (idx) {
+				get: getPseudoPrivateDescriptor(function (idx) {
 					return this[idx];
 				}),
-				set: getHiddenReadOnlyDescriptor(arrayAdvice('set', function (idx, value) {
+				set: getPseudoPrivateDescriptor(arrayAdvice('set', function (idx, value) {
 					this[idx] = value;
 				}))
 			});
@@ -735,10 +738,10 @@ define([
 				if (!(name in oldValues)) {
 					oldValues[name] = changeRecord.oldValue;
 				}
-				if (type === 'updated') {
+				if (type === 'update') {
 					return;
 				}
-				if (type === 'new') {
+				if (type === 'add') {
 					if (name in removed) {
 						delete removed[name];
 					}
@@ -747,7 +750,7 @@ define([
 					}
 					return;
 				}
-				/* if (type === 'deleted') */
+				/* if (type === 'delete') */
 				if (name in added) {
 					delete added[name];
 					delete oldValues[name];
@@ -977,9 +980,9 @@ define([
 				/* go ahead and try to merge this splice into any other splices */
 				mergeSplice(splices, changeRecord.index, changeRecord.removed.slice(), changeRecord.addedCount);
 				break;
-			case 'new':
-			case 'updated':
-			case 'deleted':
+			case 'add':
+			case 'update':
+			case 'delete':
 				/* weed out any changes to non-index values that might be reported */
 				if (!isIndex(changeRecord.name)) {
 					continue;
@@ -1297,7 +1300,7 @@ define([
 
 		if (!(callbacks = arrayCallbacks.get(target))) {
 			arrayCallbacks.set(target, callbacks = []);
-			handle = observe(target, observer, false, null, [ 'new', 'updated', 'deleted', 'splice' ]);
+			handle = observe(target, observer, false, null, [ 'add', 'update', 'delete', 'splice' ]);
 		}
 
 		callbacks.push(callback);
@@ -1347,7 +1350,7 @@ define([
 				oldValue,
 				currentValue;
 			changeRecords.forEach(function (changeRecord) {
-				if (changeRecord.type === 'updated') {
+				if (changeRecord.type === 'update') {
 					obj = changeRecord.object;
 					targetCallbacks = pathCallbacks.get(obj);
 					name = changeRecord.name;
@@ -1425,7 +1428,7 @@ define([
 	 */
 	function observe(target, observer, deep, properties, accept) {
 		var handles = [];
-		if (target instanceof Array) {
+		if (Array.isArray(target)) {
 			if (deep) {
 				target.forEach(function (item) {
 					if (typeof item === 'object' && item !== null) {

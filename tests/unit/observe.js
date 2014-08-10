@@ -35,11 +35,11 @@ define([
 				assert.strictEqual(6, changeRecords.length);
 				assert.strictEqual('foo', changeRecords[0].name);
 				assert.strictEqual(obj, changeRecords[0].object);
-				assert.strictEqual('updated', changeRecords[0].type);
+				assert.strictEqual('update', changeRecords[0].type);
 				assert.strictEqual('bar', changeRecords[0].oldValue);
 				assert.strictEqual('bar', changeRecords[5].name);
 				assert.strictEqual(obj, changeRecords[5].object);
-				assert.strictEqual('updated', changeRecords[5].type);
+				assert.strictEqual('update', changeRecords[5].type);
 				assert.strictEqual(2, changeRecords[5].oldValue);
 			});
 
@@ -66,15 +66,15 @@ define([
 
 			var callback = dfd.callback(function (changeRecords) {
 				assert.equal(16, changeRecords.length);
-				assert.equal('new', changeRecords[0].type);
+				assert.equal('add', changeRecords[0].type);
 				assert.equal(0, changeRecords[0].name);
-				assert.equal('updated', changeRecords[1].type);
+				assert.equal('update', changeRecords[1].type);
 				assert.equal('length', changeRecords[1].name);
 				assert.equal(0, changeRecords[1].oldValue);
-				assert.equal('deleted', changeRecords[14].type);
+				assert.equal('delete', changeRecords[14].type);
 				assert.equal(2, changeRecords[14].name);
 				assert.equal(3, changeRecords[14].oldValue);
-				assert.equal('updated', changeRecords[15].type);
+				assert.equal('update', changeRecords[15].type);
 				assert.equal('length', changeRecords[15].name);
 				assert.equal(3, changeRecords[15].oldValue);
 			});
@@ -103,21 +103,23 @@ define([
 
 			var callback = dfd.callback(function (changeRecords) {
 				assert.strictEqual(3, changeRecords.length);
-				assert.strictEqual('updated', changeRecords[0].type);
+				assert.strictEqual('update', changeRecords[0].type);
 				assert.strictEqual('foo', changeRecords[0].name);
-				assert.strictEqual('updated', changeRecords[1].type);
+				assert.strictEqual('update', changeRecords[1].type);
 				assert.strictEqual('foo', changeRecords[1].name);
-				assert.strictEqual('new', changeRecords[2].type);
+				assert.strictEqual('add', changeRecords[2].type);
 				assert.strictEqual('bar', changeRecords[2].name);
 
-				var foo = Object.getOwnPropertyDescriptor(obj, 'foo');
-				var bar = Object.getOwnPropertyDescriptor(obj, 'bar');
-				assert.typeOf(foo.get, 'function');
-				assert.typeOf(foo.set, 'function');
-				assert.strictEqual('bar', foo.get());
-				assert.typeOf(bar.get, 'function');
-				assert.typeOf(bar.set, 'function');
-				assert.strictEqual(1, bar.get());
+				if (!has('es7-object-observe')) {
+					var foo = Object.getOwnPropertyDescriptor(obj, 'foo');
+					var bar = Object.getOwnPropertyDescriptor(obj, 'bar');
+					assert.typeOf(foo.get, 'function');
+					assert.typeOf(foo.set, 'function');
+					assert.strictEqual('bar', foo.get());
+					assert.typeOf(bar.get, 'function');
+					assert.typeOf(bar.set, 'function');
+					assert.strictEqual(1, bar.get());
+				}
 			});
 
 			observe(obj, callback);
@@ -144,17 +146,30 @@ define([
 				bar: 1
 			};
 
-			var baz = 'qat';
+			var baz = 'qat',
+				callback;
 
-			var callback = dfd.callback(function (changeRecords) {
-				assert.strictEqual(3, changeRecords.length);
-				assert.strictEqual('updated', changeRecords[0].type);
-				assert.strictEqual('foo', changeRecords[0].name);
-				assert.strictEqual('new', changeRecords[1].type);
-				assert.strictEqual('baz', changeRecords[1].name);
-				assert.strictEqual('updated', changeRecords[2].type);
-				assert.strictEqual('baz', changeRecords[2].name);
-			});
+			if (has('es7-object-observe')) {
+				/* Native Object Observe does not create change records on accessor descriptors */
+				callback = dfd.callback(function (changeRecords) {
+					assert.strictEqual(2, changeRecords.length);
+					assert.strictEqual('update', changeRecords[0].type);
+					assert.strictEqual('foo', changeRecords[0].name);
+					assert.strictEqual('add', changeRecords[1].type);
+					assert.strictEqual('baz', changeRecords[1].name);
+				});
+			}
+			else {
+				callback = dfd.callback(function (changeRecords) {
+					assert.strictEqual(3, changeRecords.length);
+					assert.strictEqual('update', changeRecords[0].type);
+					assert.strictEqual('foo', changeRecords[0].name);
+					assert.strictEqual('add', changeRecords[1].type);
+					assert.strictEqual('baz', changeRecords[1].name);
+					assert.strictEqual('update', changeRecords[2].type);
+					assert.strictEqual('baz', changeRecords[2].name);
+				});
+			}
 
 			observe(obj, callback);
 
@@ -189,7 +204,7 @@ define([
 
 			var callback = dfd.callback(function (changeRecords) {
 				assert.strictEqual(1, changeRecords.length);
-				assert.strictEqual('deleted', changeRecords[0].type);
+				assert.strictEqual('delete', changeRecords[0].type);
 				assert.strictEqual('foo', changeRecords[0].name);
 				assert.strictEqual('bar', changeRecords[0].oldValue);
 			});

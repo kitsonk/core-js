@@ -207,19 +207,19 @@ define([
 
 		var prototypes = getBases(args, true);
 
-		function Constructor() {
+		function Composer() {
 			// summary:
 			//		The base constructor function for compose generated classes.  Will return a new instance, even if
 			//		called directly, without the `new` keyword.
 			// returns: Object
 			//		The constructed object
 
-			var instance = this instanceof Constructor ? this : Object.create(proto);
+			var instance = this instanceof Composer ? this : Object.create(proto);
 			for (var i = 0; i < constructorsLength; i++) {
 				var constructor = constructors[i],
 					result = constructor.apply(instance, arguments);
 				if (typeof result === 'object') {
-					if (result instanceof Constructor) {
+					if (result instanceof Composer) {
 						instance = result;
 					}
 					else {
@@ -248,7 +248,7 @@ define([
 			return instance;
 		}
 
-		Object.defineProperties(Constructor, {
+		Object.defineProperties(Composer, {
 			// returns "pre-calculated" bases for a Constructor class
 			_getBases: {
 				value: function (prototypeFlag) {
@@ -266,15 +266,15 @@ define([
 		// if compose not operating in a secure mode, provides a constructor property
 		if (!compose.secure) {
 			Object.defineProperty(proto, 'constructor', {
-				value: Constructor,
+				value: Composer,
 				configurable: true
 			});
 		}
 
 		// sets the prototype for the Constructor
-		Constructor.prototype = proto;
+		Composer.prototype = proto;
 
-		return Constructor;
+		return Composer;
 	}
 
 	function decorator(install, direct) {

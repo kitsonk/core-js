@@ -72,20 +72,34 @@ define([
 
 			arr.unshift(0, 1, 2);
 			assert.strictEqual(arr.shift(), 0);
-		// },
-		// '.sort()': function () {
-		// 	var dfd = this.async();
+		},
+		'.sort()': function () {
+			var dfd = this.async();
 
-		// 	var arr = [ 4, 3, 1, 5, 2 ];
+			var arr = [ 4, 3, 1, 5, 2 ];
 
-		// 	var callback = dfd.callback(function (splices) {
-		// 		console.log(splices);
-		// 		console.log(arr);
-		// 	});
+			var callback = dfd.callback(function (splices) {
+				console.log(splices);
+				var origin = [ 4, 3, 1, 5, 2 ];
+				observeArray.applySplices(origin, arr, splices);
+				console.log(origin, arr);
+			});
 
-		// 	observeArray(arr, callback);
+			observeArray(arr, callback);
 
-		// 	arr.sort();
+			arr.sort();
+		},
+		'.applySplices()': function () {
+			var origin = [ 1, 2, 3 ],
+				arr = [ 1, 2, 3, 4, 5 ],
+				splices = [
+					{ addedCount: 3, index: 3, removed: [] },
+					{ addedCount: 0, index: 5, removed: [ 6 ]}
+				];
+
+			observeArray.applySplices(origin, arr, splices);
+
+			assert.deepEqual(origin, arr);
 		}
 	});
 });

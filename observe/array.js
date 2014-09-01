@@ -6,6 +6,7 @@ define([
 	'use strict';
 
 	var push = Array.prototype.push,
+		arraySplice = Array.prototype.splice,
 		deliverChangeRecords = observableProperties ? observableProperties.deliverChangeRecords :
 			Object.deliverChangeRecords;
 
@@ -488,14 +489,23 @@ define([
 		return splices;
 	}
 
-	function applySplices(target, splices) {
-		var splice;
-		target = Object.create(target);
-		for (var i = 0, l = splices.length; i < l; i++) {
-			splice = splices[i];
-			target.splice(splice.index);
-		}
-		return target;
+	/**
+	 * Take an array of splice records and apply them to a previous version of the array.
+	 * @param  {Array} previous The previous version of the array
+	 * @param  {Array} current  The current version of the array
+	 * @param  {Array} splices  An array of splice records to be applied
+	 */
+	function applySplices(previous, current, splices) {
+		splices.forEach(function (splice) {
+			var spliceArgs = [ splice.index, splice.removed.length ],
+				addIndex = splice.index;
+			while (addIndex < splice.index + splice.addedCount) {
+				spliceArgs.push(current[addIndex]);
+				addIndex++;
+			}
+
+			arraySplice.apply(previous, spliceArgs);
+		});
 	}
 
 	/**
@@ -541,6 +551,8 @@ define([
 			}
 		};
 	};
+
+	arrayObserve.applySplices = applySplices;
 
 	return arrayObserve;
 });

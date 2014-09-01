@@ -23,7 +23,7 @@ define([
 			});
 		},
 		'get - 404': function () {
-			return node('http://www.kitsonkelly.com/bleurgh.html').then(function (response) {
+			return node('http://www.google.com/404').then(function (response) {
 				assert.equal(response.statusCode, 404);
 			});
 		},

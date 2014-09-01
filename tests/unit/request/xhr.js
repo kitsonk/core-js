@@ -120,9 +120,11 @@ define([
 				method: 'delete',
 				data: { color: 'blue' }
 			}).then(function (response) {
-				var data = JSON.parse(response.data);
-				assert.strictEqual(data.method, 'DELETE');
-				assert.strictEqual(data.payload.color, 'blue');
+				if (response.data) {
+					var data = JSON.parse(response.data);
+					assert.strictEqual(data.method, 'DELETE');
+					assert.strictEqual(data.payload.color, 'blue');
+				}
 				return response;
 			});
 		},

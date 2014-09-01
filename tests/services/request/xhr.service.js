@@ -8,7 +8,7 @@ define([
 		return {
 			status: 200,
 			headers: {
-				'Content-Type': 'application/xml'
+				'Content-Type': 'application/xml; charset=utf-8'
 			},
 			body: [
 				'<?xml version="1.0" encoding="UTF-8" ?>',
@@ -23,7 +23,7 @@ define([
 				resolve({
 					status: 200,
 					headers: {
-						'Content-Type': 'application/json'
+						'Content-Type': 'application/json; charset=utf-8'
 					},
 					body: [
 						JSON.stringify({
@@ -46,7 +46,7 @@ define([
 					return {
 						status: 200,
 						headers: {
-							'Content-Type': 'application/json'
+							'Content-Type': 'application/json; charset=utf-8'
 						},
 						body: [
 							JSON.stringify(data)

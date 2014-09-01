@@ -54,48 +54,52 @@ define([
 		}
 
 		response.url = url;
-		request.open(options.method, url, !options.blockMainThread, options.user, options.password);
+		try {
+			request.open(options.method, url, !options.blockMainThread, options.user, options.password);
 
-		request.onerror = function (event) {
-			deferred.reject(event.error);
-		};
+			request.onerror = function (event) {
+				deferred.reject(event.error);
+			};
 
-		request.ontimeout = function (event) {
-			deferred.reject(new RequestTimeoutError('Request timed out in ' + event.target.timeout + ' milliseconds'));
-		};
+			request.ontimeout = function (event) {
+				deferred.reject(new RequestTimeoutError('Request timed out in ' + event.target.timeout + ' milliseconds'));
+			};
 
-		request.onload = function () {
-			if (options.responseType === 'xml') {
-				response.data = request.responseXML;
+			request.onload = function () {
+				if (options.responseType === 'xml') {
+					response.data = request.responseXML;
+				}
+				else {
+					response.data = request.response || request.responseText;
+				}
+
+				response.statusCode = request.status;
+				response.statusText = request.statusText;
+
+				deferred.resolve(response);
+			};
+
+			request.onprogress = function (event) {
+				deferred.progress(event);
+			};
+
+			if (options.timeout > 0 && options.timeout !== Infinity) {
+				request.timeout = options.timeout;
+			}
+
+			for (var header in options.headers) {
+				request.setRequestHeader(header, options.headers[header]);
+			}
+
+			if (has('xhr2-formdata') && options.data && options.data instanceof FormData) {
+				request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+				request.send(options.data);
 			}
 			else {
-				response.data = request.response;
+				request.send(typeof options.data === 'object' ? objectToQuery(options.data) : options.data);
 			}
-
-			response.statusCode = request.status;
-			response.statusText = request.statusText;
-
-			deferred.resolve(response);
-		};
-
-		request.onprogress = function (event) {
-			deferred.progress(event);
-		};
-
-		if (options.timeout > 0 && options.timeout !== Infinity) {
-			request.timeout = options.timeout;
-		}
-
-		for (var header in options.headers) {
-			request.setRequestHeader(header, options.headers[header]);
-		}
-
-		if (has('xhr2-formdata') && options.data && options.data instanceof FormData) {
-			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-			request.send(options.data);
-		}
-		else {
-			request.send(typeof options.data === 'object' ? objectToQuery(options.data) : options.data);
+		} catch (e) {
+			deferred.reject(e);
 		}
 
 		deferred.promise.cancel = deferred.cancel;

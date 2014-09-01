@@ -73,7 +73,7 @@ define([
 			}
 
 			/* allows access to the object of old values */
-			oldValueFn = function (property) {
+			oldValueFn = function oldValueFn(property) {
 				return oldValues[property];
 			};
 

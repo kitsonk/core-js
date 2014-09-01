@@ -7,5 +7,6 @@ define([
 	'./observe/observe',
 	'./observe/array',
 	'./observe/path',
-	'./observe/summary'
+	'./observe/summary',
+	'./observe/Observable'
 ], 1);

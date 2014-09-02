@@ -13,7 +13,7 @@ define([
 	'./unit/request',
 	'./unit/stores',
 	'./unit/CallbackQueue',
-	// './unit/Deferred', // remove temporarily
+	'./unit/Deferred',
 	'./unit/Evented',
 	'./unit/Promise',
 	'./unit/Registry',

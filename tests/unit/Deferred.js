@@ -55,7 +55,7 @@ define([
 			deferred.resolve();
 			setTimeout(dfd.callback(function () {
 				assert.isTrue(deferred.isFulfilled());
-			}));
+			}), 50);
 		});
 
 		test.test('resolve() is ignored after having been fulfilled', function () {
@@ -135,7 +135,7 @@ define([
 			deferred.reject();
 			setTimeout(dfd.callback(function () {
 				assert.isTrue(deferred.isFulfilled());
-			}));
+			}), 50);
 		});
 
 		test.test('reject() is ignored after having been fulfilled', function () {

@@ -79,10 +79,10 @@ define([
 			var arr = [ 4, 3, 1, 5, 2 ];
 
 			var callback = dfd.callback(function (splices) {
-				console.log(splices);
+				// console.log(splices);
 				var origin = [ 4, 3, 1, 5, 2 ];
 				observeArray.applySplices(origin, arr, splices);
-				console.log(origin, arr);
+				// console.log(origin, arr);
 			});
 
 			observeArray(arr, callback);

@@ -3,8 +3,7 @@ define([
 	'intern/chai!assert',
 	'core/Promise',
 	'core/lang',
-	'core/tests/unit/support/requestStub',
-	'sinon'
+	'core/tests/unit/support/requestStub'
 ], function (registerSuite, assert, Promise, lang, requestStub) {
 
 	var JsonRest,
@@ -68,9 +67,9 @@ define([
 						]
 					};
 
-				requestStub.returns(new Promise(function (resolve) {
+				requestStub.returns = new Promise(function (resolve) {
 					resolve({ data: data });
-				}));
+				});
 			},
 			'test': function () {
 				var dfd = this.async(),
@@ -120,9 +119,9 @@ define([
 						]
 					};
 				
-				requestStub.returns(new Promise(function (resolve) {
+				requestStub.returns = new Promise(function (resolve) {
 					resolve(response);
-				}));
+				});
 			},
 			'test': function () {
 				var dfd = this.async();
@@ -241,7 +240,7 @@ define([
 			}
 		},
 		teardown: function () {
-			requestStub.throws(new Error('this is a stub function'));
+			requestStub.throws = new Error('this is a stub function');
 		}
 	});
 });

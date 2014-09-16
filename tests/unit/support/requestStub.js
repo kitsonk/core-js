@@ -1,7 +1,7 @@
 define([
-	'sinon'
-], function (sinon) {
-	var request = sinon.stub();
+	'sutabu/stub'
+], function (stub) {
+	var request = stub();
 
 	request.get = request;
 	request.put = request;

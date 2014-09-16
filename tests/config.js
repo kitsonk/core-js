@@ -32,7 +32,7 @@ define({
 	loader: {
 		packages: [
 			{ name: 'core', location: '.'},
-			{ name: 'sinon', location: 'node_modules/sinon/lib', main: 'sinon' }
+			{ name: 'sutabu', location: 'node_modules/sutabu/lib' }
 		]
 	},
 

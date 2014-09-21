@@ -37,15 +37,16 @@ define([
 				assert.equal(promise.constructor, Promise, 'constructor property of instances is set correctly');
 				assert.equal(Promise.prototype.constructor, Promise, 'constructor property of prototype is set correctly');
 			});
-			if (!has('ff')) {
-				/* Firefox Promises don't throw without `new` */
-				test.test('should not work without `new`', function () {
-					assert.throws(function () {
-						/* jslint newcap:true */
-						Promise(function (resolve) { resolve('value'); });
-					}, TypeError);
-				});
-			}
+			test.test('should not work without `new`', function () {
+				/* Firefox and Safari 8 Promises don't throw without `new` */
+				if (has('ff') || has('safari') === 8) {
+					this.skip();
+				}
+				assert.throws(function () {
+					/* jslint newcap:true */
+					Promise(function (resolve) { resolve('value'); });
+				}, TypeError);
+			});
 			test.test('should throw a `TypeError` if not given a function', function () {
 				assert.throws(function () {
 					new Promise();
@@ -158,31 +159,31 @@ define([
 						assert.equal(reason, 'original reason');
 					}));
 				});
-				if (!has('es6-promises')) {
-					/* Native Promises Currently Fail this test */
-					test.test('should assimilate two levels deep, for fulfillment of self fulfilling promises', function () {
-						var dfd = this.async(250);
+				test.test('should assimilate two levels deep, for fulfillment of self fulfilling promises', function () {
+					if (has('es6-promises')) {
+						this.skip('Native Promises Currently Fail this test.');
+					}
+					var dfd = this.async(250);
 
-						var originalPromise,
-							promise;
+					var originalPromise,
+						promise;
 
-						originalPromise = new Promise(function (resolve) {
-							setTimeout(function () {
-								resolve(originalPromise);
-							}, 0);
-						});
-
-						promise = new Promise(function (resolve) {
-							setTimeout(function () {
-								resolve(originalPromise);
-							}, 0);
-						});
-
-						promise.then(dfd.callback(function (value) {
-							assert.equal(value, originalPromise);
-						}));
+					originalPromise = new Promise(function (resolve) {
+						setTimeout(function () {
+							resolve(originalPromise);
+						}, 0);
 					});
-				}
+
+					promise = new Promise(function (resolve) {
+						setTimeout(function () {
+							resolve(originalPromise);
+						}, 0);
+					});
+
+					promise.then(dfd.callback(function (value) {
+						assert.equal(value, originalPromise);
+					}));
+				});
 				test.test('should assimilate two levels deep, for fulfillment', function () {
 					var dfd = this.async(250);
 
@@ -241,21 +242,22 @@ define([
 			test.test('should exist', function () {
 				assert(Promise.all);
 			});
-			if (!has('es6-promises')) {
-				test.test('throws when not passed an array', function () {
-					assert.throws(function () {
-						var all = Promise.all();
-					}, TypeError);
+			test.test('throws when not passed an array', function () {
+				if (has('es6-promises')) {
+					this.skip('Native promises currently don\'t throw.');
+				}
+				assert.throws(function () {
+					var all = Promise.all();
+				}, TypeError);
 
-					assert.throws(function () {
-						var all = Promise.all('');
-					}, TypeError);
+				assert.throws(function () {
+					var all = Promise.all('');
+				}, TypeError);
 
-					assert.throws(function () {
-						var all = Promise.all({});
-					});
+				assert.throws(function () {
+					var all = Promise.all({});
 				});
-			}
+			});
 			test.test('fulfilled only after all of the other promises are fulfilled', function () {
 				var dfd = this.async(250);
 
@@ -398,22 +400,22 @@ define([
 			test.test('it should exist', function () {
 				assert(Promise.race);
 			});
+			test.test('throws when not passed an array', function () {
+				if (has('es6-promises')) {
+					this.skip('Native promises don\'t throw');
+				}
+				assert.throws(function () {
+					var race = Promise.race();
+				}, TypeError);
 
-			if (!has('es6-promises')) {
-				test.test('throws when not passed an array', function () {
-					assert.throws(function () {
-						var race = Promise.race();
-					}, TypeError);
+				assert.throws(function () {
+					var race = Promise.race('');
+				}, TypeError);
 
-					assert.throws(function () {
-						var race = Promise.race('');
-					}, TypeError);
-
-					assert.throws(function () {
-						var race = Promise.race({});
-					}, TypeError);
-				});
-			}
+				assert.throws(function () {
+					var race = Promise.race({});
+				}, TypeError);
+			});
 			test.test('fulfilled after one of the other promises are fulfilled', function () {
 				var dfd = this.async(250);
 
@@ -446,26 +448,26 @@ define([
 					assert.isUndefined(firstResolved);
 				}));
 			});
-			if (!has('es6-promises')) {
-				/* ES6 Promises returns `true` and not 5 */
-				test.test('if one of the promises is not thenable fulfills with it first', function () {
-					var dfd = this.async(250);
+			test.test('if one of the promises is not thenable fulfills with it first', function () {
+				if (has('es6-promises')) {
+					this.skip('ES6 Promises return `true` and not 5');
+				}
+				var dfd = this.async(250);
 
-					var nonPromise = 5;
+				var nonPromise = 5;
 
-					var first = new Promise(function (resolve) {
-						resolve(true);
-					});
-
-					var second = new Promise(function (resolve) {
-						resolve(false);
-					});
-
-					Promise.race([ first, second, nonPromise]).then(dfd.callback(function (value) {
-						assert.equal(value, 5);
-					}));
+				var first = new Promise(function (resolve) {
+					resolve(true);
 				});
-			}
+
+				var second = new Promise(function (resolve) {
+					resolve(false);
+				});
+
+				Promise.race([ first, second, nonPromise]).then(dfd.callback(function (value) {
+					assert.equal(value, 5);
+				}));
+			});
 			test.test('rejected as soon as a promise is rejected', function () {
 				var dfd = this.async(250);
 
@@ -520,24 +522,25 @@ define([
 				assert(Promise.resolve);
 			});
 			test.suite('if x is a promise, adopt its state', function () {
-				if (!has('es6-promises')) {
-					test.test('if x is pending, promise must remain pending until x is fulfilled or rejected', function () {
-						var dfd = this.async(250);
+				test.test('if x is pending, promise must remain pending until x is fulfilled or rejected', function () {
+					if (has('es6-promises')) {
+						this.skip('Native promises don\'t adopt state');
+					}
+					var dfd = this.async(250);
 
-						var expectedValue, resolver, thenable, wrapped;
+					var expectedValue, resolver, thenable, wrapped;
 
-						expectedValue = 'the value';
-						thenable = { then: function (resolve) { resolver = resolve; } };
+					expectedValue = 'the value';
+					thenable = { then: function (resolve) { resolver = resolve; } };
 
-						wrapped = Promise.resolve(thenable);
+					wrapped = Promise.resolve(thenable);
 
-						wrapped.then(dfd.callback(function (value) {
-							assert.strictEqual(value, expectedValue);
-						}));
+					wrapped.then(dfd.callback(function (value) {
+						assert.strictEqual(value, expectedValue);
+					}));
 
-						resolver(expectedValue);
-					});
-				}
+					resolver(expectedValue);
+				});
 				test.test('if/when x is fulfilled, fulfill promise with the same value', function () {
 					var dfd = this.async(250);
 
@@ -782,30 +785,31 @@ define([
 				assert.instanceOf(casted, Promise);
 				assert.notStrictEqual(casted, promise);
 			});
-			if (!has('es6-promises')) {
-				test.test('if SameValue(constructor, C) is false, and isPromiseSubClass(C) is true, return PromiseResolve(promise, x)', function () {
-					var dfd = this.async(250);
+			test.test('if SameValue(constructor, C) is false, and isPromiseSubClass(C) is true, return PromiseResolve(promise, x)', function () {
+				if (has('es6-promises')) {
+					this.skip('Native Promises do not handle subclassing the same way.');
+				}
+				var dfd = this.async(250);
 
-					function PromiseSubclass() {
-						Promise.apply(this, arguments);
-					}
+				function PromiseSubclass() {
+					Promise.apply(this, arguments);
+				}
 
-					PromiseSubclass.prototype = Object.create(Promise.prototype);
-					PromiseSubclass.prototype.constructor = PromiseSubclass;
-					PromiseSubclass.resolve = Promise.resolve;
+				PromiseSubclass.prototype = Object.create(Promise.prototype);
+				PromiseSubclass.prototype.constructor = PromiseSubclass;
+				PromiseSubclass.resolve = Promise.resolve;
 
-					var promise = Promise.resolve(1),
-						casted = PromiseSubclass.resolve(promise);
+				var promise = Promise.resolve(1),
+					casted = PromiseSubclass.resolve(promise);
 
-					assert.instanceOf(casted, Promise);
-					assert.instanceOf(casted, PromiseSubclass);
-					assert.notStrictEqual(casted, promise);
+				assert.instanceOf(casted, Promise);
+				assert.instanceOf(casted, PromiseSubclass);
+				assert.notStrictEqual(casted, promise);
 
-					casted.then(dfd.callback(function (value) {
-						assert.equal(value, 1);
-					}));
-				});
-			}
+				casted.then(dfd.callback(function (value) {
+					assert.equal(value, 1);
+				}));
+			});
 			test.test('if SameValue(constructor, C) is false, and isThenable(C) is false, return PromiseResolve(promise, x)', function () {
 				var value = 1,
 					casted = Promise.resolve(value);

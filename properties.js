@@ -31,6 +31,14 @@ define([
 		};
 	};
 
+	var getHiddenAccessorDescriptor = function (get, set) {
+		return {
+			get: get,
+			set: set,
+			configurable: true
+		};
+	};
+
 	var getHiddenDescriptor = function (value) {
 		return {
 			value: value,
@@ -160,6 +168,14 @@ define([
 		 * @return {Object}       The property descriptor
 		 */
 		getPseudoPrivateDescriptor: getPseudoPrivateDescriptor,
+
+		/**
+		 * Returns a non-enumerable property descriptor
+		 * @param  {Function} get The `get` accessor function
+		 * @param  {Function} set The `set` accessor function
+		 * @return {Object}       The property descriptor
+		 */
+		getHiddenAccessorDescriptor: getHiddenAccessorDescriptor,
 
 		/**
 		 * Return a 'hidden' value property descriptor

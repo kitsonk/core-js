@@ -1,5 +1,5 @@
 define([
-	// './router/has',
+	'./router/has',
 	// './router/history',
 	'../../has!host-browser?./router/hash'
 	// './router/Router'

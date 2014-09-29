@@ -1,21 +1,20 @@
 define([
 	'intern!object',
 	'intern/chai!assert',
-	'../../../stores/IndexedDB',
+	'../../../stores/SessionStorage',
 	'../../../Promise',
 	'../../../errors/StoreError',
 	'../../../on'
-], function (registerSuite, assert, IndexedDB, Promise, StoreError, on) {
-
+], function (registerSuite, assert, SessionStorage, Promise, StoreError, on) {
+	
 	var store,
 		all = Promise.all.bind(Promise);
 
 	registerSuite({
-		name: 'core/stores/IndexedDB',
+		name: 'core/stores/SessionStorage',
 		'creation': function () {
-			store = new IndexedDB({
+			store = new SessionStorage({
 				name: 'storage',
-				dbName: 'tests',
 				data: [
 					{id: 1, name: 'one', prime: false, mappedTo: 'E', date: new Date(1970, 0, 1) },
 					{id: 2, name: 'two', even: true, prime: true, mappedTo: 'D', date: new Date(1980, 1, 2) },
@@ -24,12 +23,13 @@ define([
 					{id: 5, name: 'five', prime: true, mappedTo: 'A', date: new Date(1972, 3, 6, 6, 2) }
 				]
 			});
-			assert.isFunction(store.open);
-			assert.isFunction(store.close);
-			assert.isFunction(store.clear);
+
 			assert.isFunction(store.get);
-			assert.instanceOf(store, IndexedDB);
-			return store.ready;
+			assert.isFunction(store.put);
+			assert.isFunction(store.add);
+			assert.isFunction(store.query);
+			assert.isFunction(store.clear);
+			assert.instanceOf(store, SessionStorage);
 		},
 		'.get()': function () {
 			var promises = [];
@@ -130,11 +130,11 @@ define([
 		},
 		'.add() - duplicate': function () {
 			var dfd = this.async();
-			store.add({
+			return store.add({
 				id: 6,
 				perfect: true
 			}).then(dfd.reject.bind(dfd), dfd.callback(function (error) {
-				assert(error);
+				assert.instanceOf(error, StoreError);
 			}));
 		},
 		'.add() - new': function () {
@@ -157,19 +157,18 @@ define([
 			return store.remove(7).then(function () {
 				return store.get(7);
 			}).then(function (result) {
-				assert.isUndefined(result);
+				assert.isNull(result);
 			});
 		},
-		/* IndexedDB appears to return success when there is a missing .delete() from an object store */
-		// '.remove() - missing': function () {
-		// 	var dfd = this.async();
-		// 	return store.remove(77).then(dfd.reject.bind(dfd), function (error) {
-		// 		assert.instanceOf(error, StoreError);
-		// 		store.get(1).then(dfd.callback(function (result) {
-		// 			assert.equal(result.id, 1);
-		// 		}));
-		// 	});
-		// },
+		'.remove() - missing': function () {
+			var dfd = this.async();
+			return store.remove(77).then(dfd.reject.bind(dfd), function (error) {
+				assert.instanceOf(error, StoreError);
+				store.get(1).then(dfd.callback(function (result) {
+					assert.equal(result.id, 1);
+				}));
+			});
+		},
 		'.query() - after changes': function () {
 			var promises = [];
 			promises.push(store.query({ prime: true }));
@@ -180,16 +179,12 @@ define([
 			});
 		},
 		'persistance': function () {
-			var store2 = new IndexedDB({
-				name: 'storage',
-				dbName: 'tests'
+			var store2 = new SessionStorage({
+				name: 'storage'
 			});
 
-			return store2.ready.then(function () {
-				return store2.query({ prime: true }).then(function (results) {
-					assert.equal(results.length, 3);
-					return store2.close();
-				});
+			return store2.query({ prime: true }).then(function (results) {
+				assert.equal(results.length, 3);
 			});
 		},
 		'events': {
@@ -258,19 +253,12 @@ define([
 						handle.remove();
 					}));
 				store.query({ name: 'two' });
-			},
+			}
 		},
-		'clear': function () {
-			return store.clear().then(function () {
-				return store.query({ prime: true }).then(function (results) {
-					assert.equal(results.length, 0);
-				});
-			});
-		},
-		'close': function () {
-			assert.equal(store.state, 'open');
-			return store.close().then(function () {
-				assert.equal(store.state, 'closed');
+		'.clear()': function () {
+			store.clear();
+			return store.query({ prime: true }).then(function (results) {
+				assert.equal(results.length, 0);
 			});
 		}
 	});

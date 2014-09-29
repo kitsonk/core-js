@@ -5,9 +5,9 @@ define([
 ], function (compose, global, _Storage) {
 	'use strict';
 
-	var localStorage = global.window && global.window.localStorage;
+	var sessionStorage = global.window && global.window.sessionStorage;
 	
 	return compose(_Storage, {
-		storage: localStorage
+		storage: sessionStorage
 	});
 });

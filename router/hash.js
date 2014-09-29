@@ -35,8 +35,11 @@ define([
 
 	domReady(function () {
 		on(global, 'hashchange', function (e) {
-			e.oldHash = getSegment(e.oldURL);
-			e.newHash = getSegment(e.newURL);
+			/* IE does not support oldURL/newURL, shiming newURL, but only polling would provide oldURL :-( */
+			if ('oldURL' in e) {
+				e.oldHash = getSegment(e.oldURL);
+			}
+			e.newHash = getSegment(e.newURL = e.newURL || location.href);
 			on.emit(hash, 'change', e);
 		});
 	});

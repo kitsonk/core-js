@@ -2,8 +2,9 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'../../../router/hash',
-	'../../../on'
-], function (registerSuite, assert, hash, on) {
+	'../../../on',
+	'../../../sniff'
+], function (registerSuite, assert, hash, on, has) {
 
 	registerSuite({
 		name: 'core/router/hash',
@@ -34,19 +35,27 @@ define([
 					switch (count) {
 					case 1:
 						assert.equal(e.newHash, 'foo');
-						assert.equal(e.oldHash, '');
+						if (!(has('ie') || has('trident'))) {
+							assert.equal(e.oldHash, '');
+						}
 						break;
 					case 2:
 						assert.equal(e.newHash, 'bar');
-						assert.equal(e.oldHash, 'foo');
+						if (!(has('ie') || has('trident'))) {
+							assert.equal(e.oldHash, 'foo');
+						}
 						break;
 					case 3:
 						assert.equal(e.newHash, 'baz');
-						assert.equal(e.oldHash, 'bar');
+						if (!(has('ie') || has('trident'))) {
+							assert.equal(e.oldHash, 'bar');
+						}
 						break;
 					case 4:
 						assert.equal(e.newHash, '');
-						assert.equal(e.oldHash, 'baz');
+						if (!(has('ie') || has('trident'))) {
+							assert.equal(e.oldHash, 'baz');
+						}
 						dfd.callback(function () {
 							handle.remove();
 						})();

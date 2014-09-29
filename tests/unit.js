@@ -11,6 +11,7 @@ define([
 	'./unit/on',
 	'./unit/properties',
 	'./unit/request',
+	'./unit/router',
 	'./unit/stores',
 	'./unit/CallbackQueue',
 	'./unit/Deferred',

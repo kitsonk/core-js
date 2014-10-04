@@ -39,7 +39,10 @@ define([
 			if ('oldURL' in e) {
 				e.oldHash = getSegment(e.oldURL);
 			}
-			e.newHash = getSegment(e.newURL = e.newURL || location.href);
+			if (!'newURL' in e) {
+				e.newURL = location.href;
+			}
+			e.newHash = getSegment(e.newURL);
 			on.emit(hash, 'change', e);
 		});
 	});

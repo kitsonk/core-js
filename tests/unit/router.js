@@ -1,6 +1,6 @@
 define([
 	'./router/has',
-	// './router/history',
+	'../../router/has!html5-history?./router/history',
 	'../../has!host-browser?./router/hash'
 	// './router/Router'
 ], 1);

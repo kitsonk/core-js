@@ -1,16 +1,16 @@
 define([
 	'./doc',
-	'./SideTable',
+	'./WeakMap',
 	'./dom/add',
 	'./dom/get',
 	'./dom/matches',
 	'./dom/parseSelector',
 	'./dom/query',
 	'./dom/remove'
-], function (doc, SideTable, add, get, matches, parseSelector, query, remove) {
+], function (doc, WeakMap, add, get, matches, parseSelector, query, remove) {
 	'use strict';
 
-	var domSideTable = new SideTable(),
+	var domWeakMap = new WeakMap(),
 		namespaces = false;
 
 	var descriptors = {
@@ -73,12 +73,12 @@ define([
 
 	var dom = function (doc) {
 		var d;
-		if (domSideTable.has(doc)) {
-			return domSideTable.get(doc);
+		if (domWeakMap.has(doc)) {
+			return domWeakMap.get(doc);
 		}
 		else {
 			d = new Dom(doc);
-			domSideTable.set(doc, d);
+			domWeakMap.set(doc, d);
 			return d;
 		}
 	};
@@ -86,7 +86,7 @@ define([
 	Object.defineProperties(dom, descriptors);
 	dom.prototype = proto;
 
-	domSideTable.set(doc, dom);
+	domWeakMap.set(doc, dom);
 
 	return dom;
 });

@@ -2,16 +2,16 @@ define([
 	'../compose',
 	'../lang',
 	'../Promise',
-	'../SideTable',
+	'../WeakMap',
 	'../errors/StoreError',
 	'./_Store',
 	'./util/emitEvent',
 	'./util/queryResults',
 	'./util/simpleQueryEngine'
-], function (compose, lang, Promise, SideTable, StoreError, Store, emitEvent, queryResults, simpleQueryEngine) {
+], function (compose, lang, Promise, WeakMap, StoreError, Store, emitEvent, queryResults, simpleQueryEngine) {
 	'use strict';
 
-	var dataSideTable = new SideTable(),
+	var dataWeakMap = new WeakMap(),
 		property = compose.property,
 		uid = Date.now() % 1e9;
 
@@ -23,10 +23,10 @@ define([
 	}, {
 		data: property({
 			get: function () {
-				return dataSideTable.get(this);
+				return dataWeakMap.get(this);
 			},
 			set: function (data) {
-				dataSideTable.set(this, data);
+				dataWeakMap.set(this, data);
 				this.index = {};
 				for (var i = 0, l = data.length; i < l; i++) {
 					this.index[data[i][this.idProperty]] = i;

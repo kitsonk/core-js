@@ -4,15 +4,15 @@ define([
 	'./lang',
 	'./errors/CancelError',
 	'./Promise',
-	'./SideTable'
-], function (aspect, async, lang, CancelError, Promise, SideTable) {
+	'./WeakMap'
+], function (aspect, async, lang, CancelError, Promise, WeakMap) {
 	'use strict';
 
 	var FULFILLED_ERROR_MESSAGE = 'This deferred has already been fulfilled.';
 
 	var around = aspect.around;
 
-	var progressSubscribers = new SideTable();
+	var progressSubscribers = new WeakMap();
 
 	function publish(deferred, update) {
 		var subscribers = progressSubscribers.get(deferred),
@@ -79,7 +79,7 @@ define([
 
 		var deferred = this;
 
-		/* Initiate the SideTable for this instance of the deferred */
+		/* Initiate the WeakMap for this instance of the deferred */
 		progressSubscribers.set(deferred, []);
 
 		/**

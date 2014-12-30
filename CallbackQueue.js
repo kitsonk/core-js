@@ -1,9 +1,9 @@
 define([
-	'./SideTable'
-], function (SideTable) {
+	'./WeakMap'
+], function (WeakMap) {
 	'use strict';
 
-	var callbacks = new SideTable(),
+	var callbacks = new WeakMap(),
 		noop = function () {};
 
 	function CallbackQueue() {

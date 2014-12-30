@@ -1,12 +1,12 @@
 define([
 	'./observe',
-	'../SideTable',
+	'../WeakMap',
 	'./has!es7-object-observe?:./properties'
-], function (observe, SideTable, observableProperties) {
+], function (observe, WeakMap, observableProperties) {
 	'use strict';
 	
 	/* Stores any observe.summary callbacks on an object */
-	var summaryCallbacks = new SideTable(),
+	var summaryCallbacks = new WeakMap(),
 		deliverChangeRecords = observableProperties ? observableProperties.deliverChangeRecords :
 			Object.deliverChangeRecords;
 

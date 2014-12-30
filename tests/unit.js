@@ -18,5 +18,5 @@ define([
 	'./unit/Evented',
 	'./unit/Promise',
 	'./unit/Registry',
-	'./unit/SideTable'
+	'./unit/WeakMap'
 ], 1);

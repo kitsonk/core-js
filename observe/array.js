@@ -1,8 +1,8 @@
 define([
 	'./observe',
-	'../SideTable',
+	'../WeakMap',
 	'./has!es7-object-observe?:./properties'
-], function (observe, SideTable, observableProperties) {
+], function (observe, WeakMap, observableProperties) {
 	'use strict';
 
 	var push = Array.prototype.push,
@@ -11,7 +11,7 @@ define([
 			Object.deliverChangeRecords;
 
 	/* Stores any observe.array callbacks on an object */
-	var arrayCallbacks = new SideTable();
+	var arrayCallbacks = new WeakMap();
 
 	/**
 	 * Check if the provided value is an array index value

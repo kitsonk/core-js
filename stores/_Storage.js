@@ -2,18 +2,18 @@ define([
 	'../compose',
 	'../global',
 	'../Promise',
-	'../SideTable',
+	'../WeakMap',
 	'../errors/StoreError',
 	'./_Store',
 	'./util/emitEvent',
 	'./util/queryResults',
 	'./util/simpleQueryEngine'
-], function (compose, global, Promise, SideTable, StoreError, _Store, emitEvent, queryResults, simpleQueryEngine) {
+], function (compose, global, Promise, WeakMap, StoreError, _Store, emitEvent, queryResults, simpleQueryEngine) {
 	'use strict';
 
 	var uid = Date.now() % 1e9,
 		property = compose.property,
-		indexSideTable = new SideTable();
+		indexWeakMap = new WeakMap();
 	
 	return compose(_Store, function (options) {
 		var data,
@@ -49,15 +49,15 @@ define([
 		indexKey: '__key',
 		index: property({
 			get: function () {
-				var index = indexSideTable.get(this);
+				var index = indexWeakMap.get(this);
 				if (!index) {
 					var indexString = this.storage.getItem([this.name, this.indexKey].join('.'));
-					indexSideTable.set(this, indexString ? JSON.parse(indexString) : {});
+					indexWeakMap.set(this, indexString ? JSON.parse(indexString) : {});
 				}
-				return index || indexSideTable.get(this);
+				return index || indexWeakMap.get(this);
 			},
 			set: function (value) {
-				indexSideTable.set(this, value);
+				indexWeakMap.set(this, value);
 				this.storage.setItem([this.name, this.indexKey].join('.'), JSON.stringify(value));
 			},
 			enumerable: true,

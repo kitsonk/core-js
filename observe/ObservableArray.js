@@ -1,11 +1,11 @@
 define([
-	'../SideTable',
+	'../WeakMap',
 	'./has',
 	'./arrayUtil',
 	'./observe',
 	'./has!es7-array-observe?:./properties',
 	'../properties'
-], function (SideTable, has, arrayUtil, observe, observableProperties, properties) {
+], function (WeakMap, has, arrayUtil, observe, observableProperties, properties) {
 	'use strict';
 
 	/**
@@ -28,8 +28,8 @@ define([
 		slice = prototype.slice,
 		MAX_SIGNED_INT_VALUE = Math.pow(2, 32) - 1,
 		hasOwnProperty = Object.prototype.hasOwnProperty,
-		lengths = new SideTable(),
-		isMutating = new SideTable();
+		lengths = new WeakMap(),
+		isMutating = new WeakMap();
 
 	function arrayObserve() {
 		var args = slice.call(arguments, 0);

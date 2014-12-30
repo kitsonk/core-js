@@ -2,8 +2,8 @@ define([
 	'./has',
 	'./async',
 	'./properties',
-	'./SideTable'
-], function (has, async, properties, SideTable) {
+	'./WeakMap'
+], function (has, async, properties, WeakMap) {
 	'use strict';
 
 	/**
@@ -22,9 +22,9 @@ define([
 			FULFILLED = 1,
 			REJECTED = 2;
 
-		var states = new SideTable(),
-			details = new SideTable(),
-			subscribers = new SideTable();
+		var states = new WeakMap(),
+			details = new WeakMap(),
+			subscribers = new WeakMap();
 
 		/**
 		 * Fulfill a promise with the supplied value

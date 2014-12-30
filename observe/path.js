@@ -2,8 +2,8 @@ define([
 	'./has!es7-object-observe?:./properties',
 	'./observe',
 	'./removeObserver',
-	'../SideTable'
-], function (observableProperties, observe, removeObserver, SideTable) {
+	'../WeakMap'
+], function (observableProperties, observe, removeObserver, WeakMap) {
 	'use strict';
 
 	var noop = function () {},
@@ -13,7 +13,7 @@ define([
 		keys = Object.keys;
 
 	/* Stores any observe.path callbacks on an object */
-	var pathCallbacks = new SideTable();
+	var pathCallbacks = new WeakMap();
 
 	/**
 	 * Observe value updates to a targets path (a string where sub-properties are separated by dots (`.`)).  The

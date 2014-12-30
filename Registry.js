@@ -1,11 +1,11 @@
 define([
 	'./lang',
-	'./SideTable'
-], function (lang, SideTable) {
+	'./WeakMap'
+], function (lang, WeakMap) {
 	'use strict';
 
-	var entriesSideTable = new SideTable(),
-		defaultValueSideTable = new SideTable(),
+	var entriesWeakMap = new WeakMap(),
+		defaultValueWeakMap = new WeakMap(),
 		noop = function () {};
 
 	/**
@@ -14,8 +14,8 @@ define([
 	 *                           attempt is made to find a match but none is found, `.match()` will then throw an error.
 	 */
 	function Registry(defaultValue) {
-		entriesSideTable.set(this, []);
-		defaultValueSideTable.set(this, defaultValue);
+		entriesWeakMap.set(this, []);
+		defaultValueWeakMap.set(this, defaultValue);
 	}
 
 	Registry.prototype = {
@@ -27,7 +27,7 @@ define([
 		 */
 		match: function (/* args... */) {
 			var args = Array.prototype.slice.call(arguments),
-				entries = entriesSideTable.get(this).slice(0),
+				entries = entriesWeakMap.get(this).slice(0),
 				entry;
 
 			for (var i = 0; (entry = entries[i]); ++i) {
@@ -36,8 +36,8 @@ define([
 				}
 			}
 
-			if (defaultValueSideTable.get(this) !== undefined) {
-				return defaultValueSideTable.get(this);
+			if (defaultValueWeakMap.get(this) !== undefined) {
+				return defaultValueWeakMap.get(this);
 			}
 
 			throw new Error('No match found');
@@ -55,7 +55,8 @@ define([
 		 *                           from the stack.
 		 */
 		register: function (test, value, first) {
-			var entries = entriesSideTable.get(this),
+			console.log('register.this', this);
+			var entries = entriesWeakMap.get(this),
 				entry = {
 					test: test,
 					value: value

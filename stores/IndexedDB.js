@@ -4,14 +4,14 @@ define([
 	'../global',
 	'../on',
 	'../Promise',
-	'../SideTable',
+	'../WeakMap',
 	'../errors/StoreError',
 	'./_Store',
 	'./has',
 	'./util/emitEvent',
 	'./util/idbQueryEngine',
 	'./util/queryResults'
-], function (async, compose, global, on, Promise, SideTable, StoreError, _Store, has, emitEvent, idbQueryEngine,
+], function (async, compose, global, on, Promise, WeakMap, StoreError, _Store, has, emitEvent, idbQueryEngine,
 		queryResults) {
 	'use strict';
 
@@ -19,12 +19,12 @@ define([
 		idb = has('storage-indexeddb'),
 		property = compose.property,
 		once = on.once,
-		idbSideTable = new SideTable(),
-		stateSideTable = new SideTable(),
-		readySideTable = new SideTable();
+		idbWeakMap = new WeakMap(),
+		stateWeakMap = new WeakMap(),
+		readyWeakMap = new WeakMap();
 
 	function addput(store, type, object, options) {
-		var db = idbSideTable.get(store),
+		var db = idbWeakMap.get(store),
 			idProperty = store.idProperty,
 			id = object[idProperty] = (options && 'id' in options) ? options.id :
 					idProperty in object ? object[idProperty] : (1e9 * Math.random() >>> 0) + String(uid++),
@@ -60,9 +60,9 @@ define([
 				store[key] = options[key];
 			}
 		}
-		stateSideTable.set(store, 'closed');
+		stateWeakMap.set(store, 'closed');
 		store.ready = new Promise(function (resolve, reject) {
-			readySideTable.set(store, [ resolve, reject ]);
+			readyWeakMap.set(store, [ resolve, reject ]);
 		});
 		if (data) {
 			store.ready = store.ready.then(function () {
@@ -84,20 +84,20 @@ define([
 		ready: null,
 		state: property({
 			get: function () {
-				return stateSideTable.get(this);
+				return stateWeakMap.get(this);
 			},
 			enumerable: true,
 			configurable: true
 		}),
 		open: function () {
 			var store = this,
-				state = stateSideTable.get(store),
+				state = stateWeakMap.get(store),
 				promise = new Promise(function (resolve, reject) {
 					if (state !== 'closed') {
 						reject(new StoreError('Database is already open or opening'));
 						return;
 					}
-					stateSideTable.set(store, 'opening');
+					stateWeakMap.set(store, 'opening');
 					var request = idb.open(store.dbName, store.version);
 					once(request, 'error', function (event) {
 						reject(event);
@@ -117,20 +117,20 @@ define([
 				on(db, 'error', function (event) {
 					store.emit('error', event);
 				});
-				stateSideTable.set(store, 'open');
-				idbSideTable.set(store, db);
-				readySideTable.get(store)[0](db);
+				stateWeakMap.set(store, 'open');
+				idbWeakMap.set(store, db);
+				readyWeakMap.get(store)[0](db);
 				return db;
 			}, function (error) {
-				stateSideTable.set(store, 'error');
+				stateWeakMap.set(store, 'error');
 				store.emit('error', error);
-				readySideTable.get(store)[1](error);
+				readyWeakMap.get(store)[1](error);
 				throw error;
 			});
 		},
 		clear: function () {
 			var store = this,
-				db = idbSideTable.get(store);
+				db = idbWeakMap.get(store);
 
 			return new Promise(function (resolve, reject) {
 				var request = db.transaction(store.name, 'readwrite').objectStore(store.name).clear();
@@ -148,8 +148,8 @@ define([
 		},
 		close: function () {
 			var store = this,
-				state = stateSideTable.get(store),
-				db = idbSideTable.get(store),
+				state = stateWeakMap.get(store),
+				db = idbWeakMap.get(store),
 				promise = new Promise(function (resolve, reject) {
 					if (state === 'opening') {
 						reject(new StoreError('The database is being opened'));
@@ -157,10 +157,10 @@ define([
 					}
 					if (state !== 'closed' && db) {
 						db.close();
-						idbSideTable.delete(store);
-						stateSideTable.set(store, 'closed');
+						idbWeakMap.delete(store);
+						stateWeakMap.set(store, 'closed');
 						store.ready = new Promise(function (res, rej) {
-							readySideTable.set(store, [ res, rej ]);
+							readyWeakMap.set(store, [ res, rej ]);
 						});
 					}
 					resolve();
@@ -170,7 +170,7 @@ define([
 		},
 		get: function (id, options) {
 			var store = this,
-				db = idbSideTable.get(store),
+				db = idbWeakMap.get(store),
 				promise = new Promise(function (resolve, reject) {
 					var request = db.transaction(store.name).objectStore(store.name).get(id);
 					once(request, 'error', function (error) {
@@ -199,7 +199,7 @@ define([
 		},
 		remove: function (id, options) {
 			var store = this,
-				db = idbSideTable.get(store),
+				db = idbWeakMap.get(store),
 				promise = new Promise(function (resolve, reject) {
 					var request = db.transaction([ store.name ], 'readwrite').objectStore(store.name).delete(id);
 					once(request, 'error', function (error) {
@@ -221,7 +221,7 @@ define([
 		},
 		query: function (query, options) {
 			var store = this,
-				objectStore = idbSideTable.get(store).transaction(store.name).objectStore(store.name),
+				objectStore = idbWeakMap.get(store).transaction(store.name).objectStore(store.name),
 				promise = queryResults(store.queryEngine(query, options)(objectStore));
 
 			promise.then(function (results) {
@@ -232,7 +232,7 @@ define([
 		},
 		putData: function (data) {
 			var store = this,
-				db = idbSideTable.get(store),
+				db = idbWeakMap.get(store),
 				objectStore;
 
 			return new Promise(function (resolve, reject) {

@@ -2,8 +2,8 @@ define([
 	'../aspect',
 	'../async',
 	'../properties',
-	'../SideTable'
-], function (aspect, async, properties, SideTable) {
+	'../WeakMap'
+], function (aspect, async, properties, WeakMap) {
 	'use strict';
 
 	var isFrozen = Object.isFrozen,
@@ -11,9 +11,9 @@ define([
 		around = aspect.around,
 		getValueDescriptor = properties.getValueDescriptor;
 
-	var pendingChangeRecords = new SideTable(),
-		notifiers = new SideTable(),
-		observedProperties = new SideTable(),
+	var pendingChangeRecords = new WeakMap(),
+		notifiers = new WeakMap(),
+		observedProperties = new WeakMap(),
 		observers = [],
 		transaction;
 

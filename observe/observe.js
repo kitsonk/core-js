@@ -1,16 +1,16 @@
 define([
-	'../SideTable',
+	'../WeakMap',
 	'./addObserver',
 	'./decorateArray',
 	'./has',
 	'./has!es7-object-observe?:./properties',
 	'./removeObserver'
-], function (SideTable, addObserver, decorateArray, has, observableProperties, removeObserver) {
+], function (WeakMap, addObserver, decorateArray, has, observableProperties, removeObserver) {
 	'use strict';
 
 	var keys = Object.keys,
 		isArray = Array.isArray,
-		observed = new SideTable();
+		observed = new WeakMap();
 
 	function observe(target, observer, deep, properties, accept) {
 		var handles = [],

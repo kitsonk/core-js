@@ -15,20 +15,17 @@ define([
 
 	has.add('es6-weak-map', typeof WeakMap !== 'undefined');
 
-	var SideTable;
-	if (has('es6-weak-map')) {
-		SideTable = WeakMap;
-	}
-	else {
-		var defineProperty = Object.defineProperty,
+	if (!has('es6-weak-map')) {
+		var WeakMap,
+			defineProperty = Object.defineProperty,
 			uid = Date.now() % 1e9;
 
-		SideTable = function SideTable() {
+		WeakMap = function WeakMap() {
 			/* Assign a GUID */
 			this.name = '__st' + (1e9 * Math.random() >>> 0) + (uid++ + '__');
 		};
 
-		SideTable.prototype = {
+		WeakMap.prototype = {
 			set: function (key, value) {
 				var entry = key[this.name];
 				if (entry && entry[0] === key) {
@@ -43,12 +40,12 @@ define([
 				return value;
 			},
 			get: function (key) {
-				var entry;
-				return (entry = key[this.name]) && entry[0] === key ? entry[1] : undefined;
+				var entry = key[this.name];
+				return entry && entry[0] === key ? entry[1] : undefined;
 			},
 			has: function (key) {
-				var entry;
-				return !!((entry = key[this.name]) && entry[0] === key);
+				var entry = key[this.name];
+				return Boolean(entry && entry[0] === key);
 			},
 			'delete': function (key) {
 				this.set(key, undefined);
@@ -56,5 +53,5 @@ define([
 		};
 	}
 
-	return SideTable;
+	return WeakMap;
 });

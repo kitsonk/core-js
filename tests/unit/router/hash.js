@@ -24,12 +24,12 @@ define([
 		},
 		'.set()': function () {
 			hash.set('');
-			assert.strictEqual(getCurrentHash(), '');
+			assert.equal(getCurrentHash(), '');
 			hash.set('test');
-			assert.strictEqual(getCurrentHash(), 'test');
+			assert.equal(getCurrentHash(), 'test');
 			hash.set('foo', true);
-			assert.strictEqual(getCurrentHash(), 'foo');
-			location.assign('#');
+			assert.equal(getCurrentHash(), 'foo');
+			hash.set('');
 		},
 		'.onchange': function () {
 			var dfd = this.async(),
@@ -39,27 +39,40 @@ define([
 					switch (count) {
 					case 1:
 						assert.equal(e.newHash, 'foo');
-						if (!(has('ie') || has('trident'))) {
-							assert.equal(e.oldHash, '');
-						}
+						assert.equal(e.oldHash, '');
+						hash.set('bar', true);
 						break;
 					case 2:
 						assert.equal(e.newHash, 'bar');
-						if (!(has('ie') || has('trident'))) {
-							assert.equal(e.oldHash, 'foo');
-						}
+						assert.equal(e.oldHash, 'foo');
+						dfd.callback(function () {
+							handle.remove();
+							location.href = '#';
+						})();
 						break;
-					case 3:
+					default:
+						throw new Error('Too many calls');
+					}
+				});
+
+			hash.set('foo');
+		},
+		'.onchange - direct setting': function () {
+			if (has('ie') || has('trident')) {
+				this.skip('Not supported on IE');
+			}
+			var dfd = this.async(),
+				count = 0,
+				handle = on(hash, 'change', function (e) {
+					count++;
+					switch (count) {
+					case 1:
 						assert.equal(e.newHash, 'baz');
-						if (!(has('ie') || has('trident'))) {
-							assert.equal(e.oldHash, 'bar');
-						}
+						assert.equal(e.oldHash, '');
 						break;
-					case 4:
+					case 2:
 						assert.equal(e.newHash, '');
-						if (!(has('ie') || has('trident'))) {
-							assert.equal(e.oldHash, 'baz');
-						}
+						assert.equal(e.oldHash, 'baz');
 						dfd.callback(function () {
 							handle.remove();
 						})();
@@ -69,10 +82,8 @@ define([
 					}
 				});
 
-			hash.set('foo');
-			hash.set('bar', true);
 			location.href = '#baz';
-			location.href = '#';
+			location.href = '#';			
 		}
 	});
 

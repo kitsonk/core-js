@@ -6,6 +6,9 @@ define([
 ], function (Evented, on, global, domReady) {
 	'use strict';
 
+	var newHash,
+		oldHash;
+
 	function getSegment(str) {
 		var i = str.indexOf('#');
 		return ~i ? str.substring(i + 1) : '';
@@ -19,6 +22,8 @@ define([
 		if (hash.charAt(0) === '#') {
 			hash = hash.substring(1);
 		}
+		oldHash = getSegment(location.href);
+		newHash = hash;
 		location[replace ? 'replace' : 'assign']('#' + hash);
 	}
 
@@ -30,11 +35,9 @@ define([
 
 	domReady(function () {
 		on(global, 'hashchange', function (e) {
-			/* IE does not support oldURL/newURL, shiming newURL, but only polling would provide oldURL :-( */
-			if ('oldURL' in e) {
-				e.oldHash = getSegment(e.oldURL || '');
-			}
-			e.newHash = getSegment(e.newURL || location.href);
+			/* IE does not support oldURL/newURL, filling oldHash/newHash, but will only work if hash.set used :-( */
+			e.oldHash = 'oldURL' in e ? getSegment(e.oldURL) : oldHash;
+			e.newHash = 'newURL' in e ? getSegment(e.newURL) : newHash;
 			on.emit(hash, 'change', e);
 		});
 	});

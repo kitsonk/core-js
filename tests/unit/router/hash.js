@@ -6,6 +6,10 @@ define([
 	'../../../sniff'
 ], function (registerSuite, assert, hash, on, has) {
 
+	function getCurrentHash() {
+		return location.href.substring(location.href.indexOf('#') + 1) || '';
+	}
+
 	registerSuite({
 		name: 'core/router/hash',
 		'api': function () {
@@ -20,12 +24,12 @@ define([
 		},
 		'.set()': function () {
 			hash.set('');
-			assert.strictEqual(location.href.substring(location.href.indexOf('#') + 1), '');
+			assert.strictEqual(getCurrentHash(), '');
 			hash.set('test');
-			assert.strictEqual(location.href.substring(location.href.indexOf('#') + 1), 'test');
+			assert.strictEqual(getCurrentHash(), 'test');
 			hash.set('foo', true);
-			assert.strictEqual(location.href.substring(location.href.indexOf('#') + 1), 'foo');
-			location.href = '#';
+			assert.strictEqual(getCurrentHash(), 'foo');
+			location.assign('#');
 		},
 		'.onchange': function () {
 			var dfd = this.async(),

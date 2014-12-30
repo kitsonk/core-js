@@ -19,12 +19,7 @@ define([
 		if (hash.charAt(0) === '#') {
 			hash = hash.substring(1);
 		}
-		if (replace) {
-			location.replace('#' + hash);
-		}
-		else {
-			location.href = '#' + hash;
-		}
+		location[replace ? 'replace' : 'assign']('#' + hash);
 	}
 
 	var hash = new Evented();
@@ -37,12 +32,9 @@ define([
 		on(global, 'hashchange', function (e) {
 			/* IE does not support oldURL/newURL, shiming newURL, but only polling would provide oldURL :-( */
 			if ('oldURL' in e) {
-				e.oldHash = getSegment(e.oldURL);
+				e.oldHash = getSegment(e.oldURL || '');
 			}
-			if (!'newURL' in e) {
-				e.newURL = location.href;
-			}
-			e.newHash = getSegment(e.newURL);
+			e.newHash = getSegment(e.newURL || location.href);
 			on.emit(hash, 'change', e);
 		});
 	});

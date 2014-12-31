@@ -3,9 +3,6 @@ define({
 	proxyUrl: 'http://localhost:9001/',
 
 	capabilities: {
-		'selenium-version': '2.41.0',
-		'record-screenshots': false,
-		'sauce-advisor': false,
 		'video-upload-on-pass': false,
 		'max-duration': 300
 	},
@@ -14,10 +11,11 @@ define({
 		{ browserName: 'internet explorer', version: '11', platform: 'Windows 8.1' },
 		{ browserName: 'internet explorer', version: '10', platform: 'Windows 8' },
 		{ browserName: 'internet explorer', version: [ '9', '10' ], platform: 'Windows 7' },
-		{ browserName: 'chrome', version: '', platform: [ 'Linux', 'OS X 10.9', 'Windows XP', 'Windows 7', 'Windows 8', 'Windows 8.1' ] },
-		{ browserName: 'firefox', version: '28', platform: [ 'OS X 10.9', 'Windows 7', 'Windows XP', 'Linux' ] },
-		{ browserName: 'safari', version: '6', platform: 'OS X 10.8' },
-		{ browserName: 'safari', version: '7', platform: 'OS X 10.9' }
+		{ browserName: 'chrome', version: '', platform: [ 'Linux', 'OS X 10.10', 'Windows XP', 'Windows 7', 'Windows 8', 'Windows 8.1' ] },
+		{ browserName: 'firefox', version: '', platform: [ 'OS X 10.10', 'Windows 7', 'Windows XP', 'Linux' ] },
+		// { browserName: 'safari', version: '6', platform: 'OS X 10.8' },
+		{ browserName: 'safari', version: '7', platform: 'OS X 10.9' },
+		{ browserName: 'safari', version: '8', platform: 'OS X 10.10' }
 	],
 
 	maxConcurrency: 3,

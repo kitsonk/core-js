@@ -19,9 +19,7 @@ define([
 	}
 
 	function setHash(hash, replace) {
-		if (hash.charAt(0) === '#') {
-			hash = hash.substring(1);
-		}
+		hash = hash.charAt(0) === '#' ? hash.substring(1) : hash;
 		oldHash = getSegment(location.href);
 		newHash = hash;
 		location[replace ? 'replace' : 'assign']('#' + hash);

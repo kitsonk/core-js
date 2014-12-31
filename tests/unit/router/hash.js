@@ -32,7 +32,7 @@ define([
 			hash.set('');
 		},
 		'.onchange': function () {
-			var dfd = this.async(),
+			var dfd = this.async(250),
 				count = 0,
 				handle = on(hash, 'change', function (e) {
 					count++;
@@ -61,7 +61,7 @@ define([
 			if (has('ie') || has('trident')) {
 				this.skip('Not supported on IE');
 			}
-			var dfd = this.async(),
+			var dfd = this.async(250),
 				count = 0,
 				handle = on(hash, 'change', function (e) {
 					count++;

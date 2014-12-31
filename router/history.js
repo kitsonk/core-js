@@ -23,7 +23,7 @@ define([
 		var path = location.pathname,
 			hasBase = basePath ? path.indexOf(basePath) === 0 : false;
 		return {
-			path: hasBase ? path.substring(basePath.length) : path,
+			pathname: hasBase ? path.substring(basePath.length) : path,
 			search: location.search,
 			hash: location.hash,
 			state: history.state
@@ -31,15 +31,23 @@ define([
 	};
 
 	hist.set = function (path, state, replace) {
+		var basePath = this.basePath;
 		state = state || null;
-		return (replace ? replaceState : pushState)(state, '', path);
+		return (replace ? replaceState : pushState)(state, '', basePath ? basePath + path : path);
 	};
 
 	hist.onchange = null;
 
 	domReady(function () {
 		on(global, 'popstate', function (e) {
+			var loc = e.target.location,
+				basePath = this.basePath,
+				hasBase = basePath ? path.indexOf(basePath) === 0 : false;
+			e.pathname = hasBase ? loc.pathname.substring(basePath.length) : loc.pathname;
+			e.search = loc.search;
+			e.hash = loc.hash;
 			on.emit(hist, 'change', e);
+			return false;
 		});
 	});
 

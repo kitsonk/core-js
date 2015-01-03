@@ -13,6 +13,7 @@ define([
 	'./unit/request',
 	'./unit/router',
 	'./unit/stores',
+	'./unit/throttle',
 	'./unit/CallbackQueue',
 	'./unit/Deferred',
 	'./unit/Evented',

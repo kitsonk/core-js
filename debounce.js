@@ -1,5 +1,7 @@
 define([
 ], function () {
+	'use strict';
+
 	return function debounce(callback, delay, binding) {
 		var timer;
 		return function () {

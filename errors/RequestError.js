@@ -1,4 +1,5 @@
 define(['./create'], function (create) {
+	'use strict';
 	// module:
 	//		dojo/errors/RequestError
 

@@ -1,6 +1,7 @@
 define([
 	'./properties'
 ], function (observableProperties) {
+	'use strict';
 
 	var createChangeRecord = observableProperties.createChangeRecord,
 		createSpliceChangeRecord = observableProperties.createSpliceChangeRecord,

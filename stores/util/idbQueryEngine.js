@@ -2,6 +2,8 @@ define([
 	'../../on',
 	'../../Promise'
 ], function (on, Promise) {
+	'use strict';
+	
 	return function (query, options) {
 		switch (typeof query) {
 		case 'object':

@@ -1,4 +1,6 @@
 define([ './has' ], function (has) {
+	'use strict';
+	
 	if (!has('host-node')) {
 		throw new Error('node plugin failed to load because environment is not Node.js');
 	}

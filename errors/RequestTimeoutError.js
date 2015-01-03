@@ -1,4 +1,6 @@
 define(['./create', './RequestError'], function (create, RequestError) {
+	'use strict';
+	
 	// module:
 	//		dojo/errors/RequestTimeoutError
 

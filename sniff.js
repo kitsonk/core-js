@@ -1,6 +1,7 @@
 define([
 	'./has'
 ], function (has) {
+	'use strict';
 	// module:
 	//		dojo/sniff
 

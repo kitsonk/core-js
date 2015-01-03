@@ -1,14 +1,15 @@
 define([
 ], function () {
+	'use strict';
 
-	var throttle = function throttle(callback, delay, binding, trailing) {
+	return function throttle(callback, delay, binding) {
 		var last,
 			handle;
 		
 		return function () {
 			binding = binding || this;
 			var now = Date.now(),
-				args = Array.prototype.slice.call(arguments);
+				args = arguments;
 
 			if (last && now < last + delay) {
 				clearTimeout(handle);
@@ -24,5 +25,4 @@ define([
 		};
 	};
 
-	return throttle;
 });

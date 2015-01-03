@@ -1,4 +1,6 @@
 define([], function () {
+	'use strict';
+	
 	return function (name, ctor, base, props) {
 		base = base || Error;
 

@@ -1,9 +1,11 @@
 define([
 	'../Evented',
+	'../async',
 	'../domReady',
 	'../on',
 	'../global'
-], function (Evented, domReady, on, global) {
+], function (Evented, async, domReady, on, global) {
+	'use strict';
 
 	var hist = new Evented(),
 		pushState = history.pushState.bind(history),
@@ -27,12 +29,16 @@ define([
 			search: location.search,
 			hash: location.hash,
 			state: history.state
-		}
+		};
 	};
 
 	hist.set = function (path, state, replace) {
 		var basePath = this.basePath;
 		state = state || null;
+		on.emit(hist, 'change', {
+			pathname: path,
+			state: state
+		});
 		return (replace ? replaceState : pushState)(state, '', basePath ? basePath + path : path);
 	};
 
@@ -42,7 +48,7 @@ define([
 		on(global, 'popstate', function (e) {
 			var loc = e.target.location,
 				basePath = this.basePath,
-				hasBase = basePath ? path.indexOf(basePath) === 0 : false;
+				hasBase = basePath ? loc.pathname.indexOf(basePath) === 0 : false;
 			e.pathname = hasBase ? loc.pathname.substring(basePath.length) : loc.pathname;
 			e.search = loc.search;
 			e.hash = loc.hash;
